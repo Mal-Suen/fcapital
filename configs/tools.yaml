@@ -9,10 +9,22 @@ tools:
     category: "portscan"
     description: "Network Security Scanner"
     install:
-      linux: "sudo apt install nmap -y"
-      macos: "brew install nmap"
-      windows: "choco install nmap -y"
-  
+      # Linux - 多种包管理器
+      apt: "sudo apt install nmap -y"
+      yum: "sudo yum install nmap -y"
+      dnf: "sudo dnf install nmap -y"
+      pacman: "sudo pacman -S nmap --noconfirm"
+      zypper: "sudo zypper install -y nmap"
+      apk: "sudo apk add nmap"
+      # macOS
+      brew: "brew install nmap"
+      # Windows
+      choco: "choco install nmap -y"
+      scoop: "scoop install nmap"
+      # 备用: 官网下载
+      manual_windows: "Download from https://nmap.org/download.html"
+      manual_linux: "Download from https://nmap.org/download.html"
+
   # ==================== Web 扫描 ====================
   dirsearch:
     name: "Dirsearch"
@@ -20,46 +32,54 @@ tools:
     category: "webscan"
     description: "Web Path Scanner"
     install:
-      linux: "sudo apt install dirsearch -y"
+      apt: "sudo apt install dirsearch -y"
+      yum: "sudo yum install dirsearch -y"
       pip: "pip install dirsearch"
-  
+      manual: "git clone https://github.com/maurosoria/dirsearch.git"
+
   dirb:
     name: "Dirb"
     binary: "dirb"
     category: "webscan"
     description: "Web Content Scanner"
     install:
-      linux: "sudo apt install dirb -y"
-      macos: "brew install dirb"
-  
+      apt: "sudo apt install dirb -y"
+      yum: "sudo yum install dirb -y"
+      brew: "brew install dirb"
+      manual: "Download from https://dirb.sourceforge.net/"
+
   gobuster:
     name: "Gobuster"
     binary: "gobuster"
     category: "webscan"
     description: "Directory/File/DNS Busting Tool"
     install:
-      linux: "sudo apt install gobuster -y"
-      macos: "brew install gobuster"
+      apt: "sudo apt install gobuster -y"
+      yum: "sudo yum install gobuster -y"
+      brew: "brew install gobuster"
       go: "go install github.com/OJ/gobuster/v3@latest"
-  
+
   ffuf:
     name: "Ffuf"
     binary: "ffuf"
     category: "webscan"
     description: "Fast Web Fuzzer"
     install:
-      linux: "sudo apt install ffuf -y"
+      apt: "sudo apt install ffuf -y"
+      yum: "sudo yum install ffuf -y"
       go: "go install github.com/ffuf/ffuf/v2@latest"
-  
+
   wpscan:
     name: "WPScan"
     binary: "wpscan"
     category: "webscan"
     description: "WordPress Security Scanner"
     install:
-      linux: "sudo apt install wpscan -y"
+      apt: "sudo apt install wpscan -y"
+      yum: "sudo yum install wpscan -y"
       gem: "gem install wpscan"
-  
+      docker: "docker pull wpscanteam/wpscan"
+
   # ==================== 漏洞扫描 ====================
   nuclei:
     name: "Nuclei"
@@ -67,18 +87,20 @@ tools:
     category: "vulnscan"
     description: "Vulnerability Scanner"
     install:
-      linux: "sudo apt install nuclei -y"
+      apt: "sudo apt install nuclei -y"
       go: "go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest"
-  
+
   sqlmap:
     name: "SQLMap"
     binary: "sqlmap"
     category: "vulnscan"
     description: "Automatic SQL Injection Tool"
     install:
-      linux: "sudo apt install sqlmap -y"
+      apt: "sudo apt install sqlmap -y"
+      yum: "sudo yum install sqlmap -y"
       pip: "pip install sqlmap"
-  
+      git: "git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git"
+
   # ==================== 子域名枚举 ====================
   subfinder:
     name: "Subfinder"
@@ -86,9 +108,9 @@ tools:
     category: "subdomain"
     description: "Subdomain Discovery Tool"
     install:
-      linux: "sudo apt install subfinder -y"
+      apt: "sudo apt install subfinder -y"
       go: "go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"
-  
+
   # ==================== 信息收集 ====================
   httpx:
     name: "Httpx"
@@ -96,18 +118,18 @@ tools:
     category: "recon"
     description: "HTTP Toolkit"
     install:
-      linux: "sudo apt install httpx -y"
+      apt: "sudo apt install httpx -y"
       go: "go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest"
-  
+
   dnsx:
     name: "Dnsx"
     binary: "dnsx"
     category: "recon"
     description: "DNS Toolkit"
     install:
-      linux: "sudo apt install dnsx -y"
+      apt: "sudo apt install dnsx -y"
       go: "go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest"
-  
+
   # ==================== 密码攻击 ====================
   hydra:
     name: "Hydra"
@@ -115,5 +137,40 @@ tools:
     category: "password"
     description: "Network Logon Cracker"
     install:
-      linux: "sudo apt install hydra -y"
-      macos: "brew install hydra"
+      apt: "sudo apt install hydra -y"
+      yum: "sudo yum install hydra -y"
+      brew: "brew install hydra"
+      manual: "Download from https://github.com/vanhauser-thc/thc-hydra"
+
+  # ==================== 其他工具 ====================
+  nikto:
+    name: "Nikto"
+    binary: "nikto"
+    category: "webscan"
+    description: "Web Server Scanner"
+    install:
+      apt: "sudo apt install nikto -y"
+      yum: "sudo yum install nikto -y"
+      brew: "brew install nikto"
+      git: "git clone https://github.com/sullo/nikto.git"
+
+  masscan:
+    name: "Masscan"
+    binary: "masscan"
+    category: "portscan"
+    description: "Fast Port Scanner"
+    install:
+      apt: "sudo apt install masscan -y"
+      yum: "sudo yum install masscan -y"
+      brew: "brew install masscan"
+      git: "git clone https://github.com/robertdavidgraham/masscan.git"
+
+  whatweb:
+    name: "WhatWeb"
+    binary: "whatweb"
+    category: "recon"
+    description: "Web Scanner"
+    install:
+      apt: "sudo apt install whatweb -y"
+      yum: "sudo yum install whatweb -y"
+      gem: "gem install whatweb"

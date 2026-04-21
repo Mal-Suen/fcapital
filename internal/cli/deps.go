@@ -92,7 +92,7 @@ func runDepsCheck(cmd *cobra.Command, args []string) {
 	fmt.Printf("[*] Ready: %d, Missing: %d\n", ready, missing)
 
 	if missing > 0 {
-		yellow.Println("\n  [!] Some tools are missing. Run 'fcapital deps install' for installation instructions.")
+		yellow.Println("\n  [!] Some tools are missing. Run 'fcapital deps install' to install them.")
 	} else {
 		green.Println("\n  [+] All tools are ready!")
 	}
@@ -119,6 +119,7 @@ func runDepsList(cmd *cobra.Command, args []string) {
 
 func runDepsInstall(cmd *cobra.Command, args []string) {
 	fmt.Println("\n[*] Tool Installation")
+	fmt.Printf("[*] OS: %s/%s\n", runtime.GOOS, runtime.GOARCH)
 	fmt.Println()
 
 	tm := InitToolManager()
@@ -176,8 +177,8 @@ func runDepsInstall(cmd *cobra.Command, args []string) {
 func installTool(tool *toolmgr.Tool) error {
 	install := tool.Install
 
-	// 优先尝试 Go 安装
-	if install.Go != "" {
+	// 1. 优先尝试 Go 安装 (跨平台)
+	if install.Go != "" && hasCommand("go") {
 		fmt.Printf("    [*] Trying Go install...\n")
 		if err := runGoInstall(install.Go); err != nil {
 			fmt.Printf("    [!] Go install failed: %v\n", err)
@@ -187,8 +188,8 @@ func installTool(tool *toolmgr.Tool) error {
 		}
 	}
 
-	// 尝试 Pip 安装
-	if install.Pip != "" {
+	// 2. 尝试 Pip 安装 (跨平台)
+	if install.Pip != "" && hasCommand("pip") {
 		fmt.Printf("    [*] Trying Pip install...\n")
 		if err := runPipInstall(install.Pip); err != nil {
 			fmt.Printf("    [!] Pip install failed: %v\n", err)
@@ -198,8 +199,19 @@ func installTool(tool *toolmgr.Tool) error {
 		}
 	}
 
-	// 尝试 Gem 安装
-	if install.Gem != "" {
+	// 3. 尝试 Pip3 安装 (跨平台)
+	if install.Pip3 != "" && hasCommand("pip3") {
+		fmt.Printf("    [*] Trying Pip3 install...\n")
+		if err := runPip3Install(install.Pip3); err != nil {
+			fmt.Printf("    [!] Pip3 install failed: %v\n", err)
+		} else {
+			green.Println("    [+] Pip3 install successful!")
+			return nil
+		}
+	}
+
+	// 4. 尝试 Gem 安装 (跨平台)
+	if install.Gem != "" && hasCommand("gem") {
 		fmt.Printf("    [*] Trying Gem install...\n")
 		if err := runGemInstall(install.Gem); err != nil {
 			fmt.Printf("    [!] Gem install failed: %v\n", err)
@@ -209,56 +221,238 @@ func installTool(tool *toolmgr.Tool) error {
 		}
 	}
 
-	// 尝试系统包管理器
-	if runtime.GOOS == "windows" {
-		if install.Windows != "" {
-			// 检查是否有 choco 或 scoop
-			if hasCommand("choco") {
-				fmt.Printf("    [*] Trying Chocolatey...\n")
-				// 提取 choco 命令
-				if strings.Contains(install.Windows, "choco") {
-					if err := runCommand("choco", "install", tool.Binary, "-y"); err != nil {
-						fmt.Printf("    [!] Chocolatey install failed: %v\n", err)
-					} else {
-						green.Println("    [+] Chocolatey install successful!")
-						return nil
-					}
-				}
-			}
-			// 打印手动安装说明
-			yellow.Printf("    [!] Automatic install not available. Manual install:\n")
-			fmt.Printf("        %s\n", install.Windows)
-		}
-	} else if runtime.GOOS == "darwin" {
-		if install.MacOS != "" && strings.Contains(install.MacOS, "brew") {
-			fmt.Printf("    [*] Trying Homebrew...\n")
-			if err := runCommand("brew", "install", tool.Binary); err != nil {
-				fmt.Printf("    [!] Homebrew install failed: %v\n", err)
-			} else {
-				green.Println("    [+] Homebrew install successful!")
-				return nil
-			}
-		}
-	} else {
-		if install.Linux != "" && strings.Contains(install.Linux, "apt") {
-			fmt.Printf("    [*] Trying apt...\n")
-			if err := runCommand("sudo", "apt", "install", tool.Binary, "-y"); err != nil {
-				fmt.Printf("    [!] apt install failed: %v\n", err)
-			} else {
-				green.Println("    [+] apt install successful!")
-				return nil
-			}
+	// 5. 尝试 Cargo 安装 (跨平台)
+	if install.Cargo != "" && hasCommand("cargo") {
+		fmt.Printf("    [*] Trying Cargo install...\n")
+		if err := runCargoInstall(install.Cargo); err != nil {
+			fmt.Printf("    [!] Cargo install failed: %v\n", err)
+		} else {
+			green.Println("    [+] Cargo install successful!")
+			return nil
 		}
 	}
 
-	return fmt.Errorf("no automatic installation method available")
+	// 6. 尝试 Npm 安装 (跨平台)
+	if install.Npm != "" && hasCommand("npm") {
+		fmt.Printf("    [*] Trying Npm install...\n")
+		if err := runNpmInstall(install.Npm); err != nil {
+			fmt.Printf("    [!] Npm install failed: %v\n", err)
+		} else {
+			green.Println("    [+] Npm install successful!")
+			return nil
+		}
+	}
+
+	// 7. 根据操作系统尝试系统包管理器
+	switch runtime.GOOS {
+	case "windows":
+		return installWindows(tool)
+	case "darwin":
+		return installMacOS(tool)
+	default:
+		return installLinux(tool)
+	}
+}
+
+// installWindows Windows 系统安装
+func installWindows(tool *toolmgr.Tool) error {
+	install := tool.Install
+
+	// Chocolatey
+	if install.Choco != "" && hasCommand("choco") {
+		fmt.Printf("    [*] Trying Chocolatey...\n")
+		if err := runCommand("choco", "install", tool.Binary, "-y"); err != nil {
+			fmt.Printf("    [!] Chocolatey failed: %v\n", err)
+		} else {
+			green.Println("    [+] Chocolatey install successful!")
+			return nil
+		}
+	}
+
+	// Scoop
+	if install.Scoop != "" && hasCommand("scoop") {
+		fmt.Printf("    [*] Trying Scoop...\n")
+		if err := runCommand("scoop", "install", tool.Binary); err != nil {
+			fmt.Printf("    [!] Scoop failed: %v\n", err)
+		} else {
+			green.Println("    [+] Scoop install successful!")
+			return nil
+		}
+	}
+
+	// Winget
+	if install.Winget != "" && hasCommand("winget") {
+		fmt.Printf("    [*] Trying Winget...\n")
+		if err := runCommand("winget", "install", "--id", tool.Binary, "-e", "--accept-source-agreements", "--accept-package-agreements"); err != nil {
+			fmt.Printf("    [!] Winget failed: %v\n", err)
+		} else {
+			green.Println("    [+] Winget install successful!")
+			return nil
+		}
+	}
+
+	// 手动安装说明
+	printManualInstall(tool, "windows")
+	return fmt.Errorf("no automatic installation method available on Windows")
+}
+
+// installMacOS macOS 系统安装
+func installMacOS(tool *toolmgr.Tool) error {
+	install := tool.Install
+
+	// Homebrew
+	if install.Brew != "" && hasCommand("brew") {
+		fmt.Printf("    [*] Trying Homebrew...\n")
+		if err := runCommand("brew", "install", tool.Binary); err != nil {
+			fmt.Printf("    [!] Homebrew failed: %v\n", err)
+		} else {
+			green.Println("    [+] Homebrew install successful!")
+			return nil
+		}
+	}
+
+	// MacPorts
+	if install.Port != "" && hasCommand("port") {
+		fmt.Printf("    [*] Trying MacPorts...\n")
+		if err := runCommand("sudo", "port", "install", tool.Binary); err != nil {
+			fmt.Printf("    [!] MacPorts failed: %v\n", err)
+		} else {
+			green.Println("    [+] MacPorts install successful!")
+			return nil
+		}
+	}
+
+	// 手动安装说明
+	printManualInstall(tool, "macos")
+	return fmt.Errorf("no automatic installation method available on macOS")
+}
+
+// installLinux Linux 系统安装
+func installLinux(tool *toolmgr.Tool) error {
+	install := tool.Install
+
+	// 检测 Linux 发行版并选择合适的包管理器
+	// 优先级: apt > dnf > yum > pacman > zypper > apk
+
+	// Debian/Ubuntu/Kali
+	if install.Apt != "" && hasCommand("apt") {
+		fmt.Printf("    [*] Trying apt (Debian/Ubuntu/Kali)...\n")
+		if err := runCommand("sudo", "apt", "install", tool.Binary, "-y"); err != nil {
+			fmt.Printf("    [!] apt failed: %v\n", err)
+		} else {
+			green.Println("    [+] apt install successful!")
+			return nil
+		}
+	}
+
+	// Fedora/RHEL 8+
+	if install.Dnf != "" && hasCommand("dnf") {
+		fmt.Printf("    [*] Trying dnf (Fedora/RHEL 8+)...\n")
+		if err := runCommand("sudo", "dnf", "install", tool.Binary, "-y"); err != nil {
+			fmt.Printf("    [!] dnf failed: %v\n", err)
+		} else {
+			green.Println("    [+] dnf install successful!")
+			return nil
+		}
+	}
+
+	// RHEL/CentOS (旧版本)
+	if install.Yum != "" && hasCommand("yum") && !hasCommand("dnf") {
+		fmt.Printf("    [*] Trying yum (RHEL/CentOS)...\n")
+		if err := runCommand("sudo", "yum", "install", tool.Binary, "-y"); err != nil {
+			fmt.Printf("    [!] yum failed: %v\n", err)
+		} else {
+			green.Println("    [+] yum install successful!")
+			return nil
+		}
+	}
+
+	// Arch Linux
+	if install.Pacman != "" && hasCommand("pacman") {
+		fmt.Printf("    [*] Trying pacman (Arch Linux)...\n")
+		if err := runCommand("sudo", "pacman", "-S", tool.Binary, "--noconfirm"); err != nil {
+			fmt.Printf("    [!] pacman failed: %v\n", err)
+		} else {
+			green.Println("    [+] pacman install successful!")
+			return nil
+		}
+	}
+
+	// openSUSE
+	if install.Zypper != "" && hasCommand("zypper") {
+		fmt.Printf("    [*] Trying zypper (openSUSE)...\n")
+		if err := runCommand("sudo", "zypper", "install", "-y", tool.Binary); err != nil {
+			fmt.Printf("    [!] zypper failed: %v\n", err)
+		} else {
+			green.Println("    [+] zypper install successful!")
+			return nil
+		}
+	}
+
+	// Alpine Linux
+	if install.Apk != "" && hasCommand("apk") {
+		fmt.Printf("    [*] Trying apk (Alpine Linux)...\n")
+		if err := runCommand("sudo", "apk", "add", tool.Binary); err != nil {
+			fmt.Printf("    [!] apk failed: %v\n", err)
+		} else {
+			green.Println("    [+] apk install successful!")
+			return nil
+		}
+	}
+
+	// 手动安装说明
+	printManualInstall(tool, "linux")
+	return fmt.Errorf("no automatic installation method available on Linux")
+}
+
+// printManualInstall 打印手动安装说明
+func printManualInstall(tool *toolmgr.Tool, os string) {
+	yellow.Println("    [!] Automatic install not available. Manual install options:")
+
+	install := tool.Install
+
+	// 打印所有可用的安装方式
+	if install.Manual != "" {
+		fmt.Printf("        - %s\n", install.Manual)
+	}
+
+	switch os {
+	case "windows":
+		if install.ManualWindows != "" {
+			fmt.Printf("        - %s\n", install.ManualWindows)
+		}
+		if install.Choco != "" && !hasCommand("choco") {
+			fmt.Printf("        - Install Chocolatey: https://chocolatey.org/install\n")
+			fmt.Printf("          Then: choco install %s -y\n", tool.Binary)
+		}
+		if install.Scoop != "" && !hasCommand("scoop") {
+			fmt.Printf("        - Install Scoop: https://scoop.sh\n")
+			fmt.Printf("          Then: scoop install %s\n", tool.Binary)
+		}
+	case "macos":
+		if install.ManualMacOS != "" {
+			fmt.Printf("        - %s\n", install.ManualMacOS)
+		}
+		if install.Brew != "" && !hasCommand("brew") {
+			fmt.Printf("        - Install Homebrew: https://brew.sh\n")
+			fmt.Printf("          Then: brew install %s\n", tool.Binary)
+		}
+	case "linux":
+		if install.ManualLinux != "" {
+			fmt.Printf("        - %s\n", install.ManualLinux)
+		}
+		if install.Git != "" {
+			fmt.Printf("        - Clone: %s\n", install.Git)
+		}
+	}
+
+	if install.Docker != "" {
+		fmt.Printf("        - Docker: %s\n", install.Docker)
+	}
 }
 
 // runGoInstall 执行 Go 安装命令
 func runGoInstall(pkg string) error {
-	// 解析包路径，支持多种格式:
-	// - "go install github.com/OJ/gobuster/v3@latest"
-	// - "github.com/OJ/gobuster/v3@latest"
 	pkgPath := strings.TrimSpace(pkg)
 	pkgPath = strings.TrimPrefix(pkgPath, "go install ")
 	pkgPath = strings.TrimPrefix(pkgPath, "go install")
@@ -274,15 +468,22 @@ func runGoInstall(pkg string) error {
 
 // runPipInstall 执行 Pip 安装命令
 func runPipInstall(pkg string) error {
-	// 解析包名，支持多种格式:
-	// - "pip install dirsearch"
-	// - "dirsearch"
 	pkgName := strings.TrimSpace(pkg)
 	pkgName = strings.TrimPrefix(pkgName, "pip install ")
 	pkgName = strings.TrimPrefix(pkgName, "pip install")
 
-	// 使用 --user 确保用户安装
 	cmd := exec.Command("pip", "install", "--user", pkgName)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%v: %s", err, string(output))
+	}
+	return nil
+}
+
+// runPip3Install 执行 Pip3 安装命令
+func runPip3Install(pkg string) error {
+	pkgName := strings.TrimSpace(pkg)
+	cmd := exec.Command("pip3", "install", "--user", pkgName)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v: %s", err, string(output))
@@ -293,6 +494,26 @@ func runPipInstall(pkg string) error {
 // runGemInstall 执行 Gem 安装命令
 func runGemInstall(pkg string) error {
 	cmd := exec.Command("gem", "install", pkg)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%v: %s", err, string(output))
+	}
+	return nil
+}
+
+// runCargoInstall 执行 Cargo 安装命令
+func runCargoInstall(pkg string) error {
+	cmd := exec.Command("cargo", "install", pkg)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%v: %s", err, string(output))
+	}
+	return nil
+}
+
+// runNpmInstall 执行 Npm 安装命令
+func runNpmInstall(pkg string) error {
+	cmd := exec.Command("npm", "install", "-g", pkg)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v: %s", err, string(output))

@@ -35,14 +35,42 @@ type Tool struct {
 	Source     ToolSource `json:"source"`
 }
 
-// InstallCmd 安装命令
+// InstallCmd 安装命令 - 支持多种安装方式
 type InstallCmd struct {
-	Linux   string `json:"linux,omitempty" yaml:"linux,omitempty"`
-	MacOS   string `json:"macos,omitempty" yaml:"macos,omitempty"`
-	Windows string `json:"windows,omitempty" yaml:"windows,omitempty"`
-	Go      string `json:"go,omitempty" yaml:"go,omitempty"`
-	Pip     string `json:"pip,omitempty" yaml:"pip,omitempty"`
-	Gem     string `json:"gem,omitempty" yaml:"gem,omitempty"`
+	// Linux 包管理器
+	Apt    string `json:"apt,omitempty" yaml:"apt,omitempty"`       // Debian/Ubuntu/Kali
+	Yum    string `json:"yum,omitempty" yaml:"yum,omitempty"`       // RHEL/CentOS (旧)
+	Dnf    string `json:"dnf,omitempty" yaml:"dnf,omitempty"`       // Fedora/RHEL 8+
+	Pacman string `json:"pacman,omitempty" yaml:"pacman,omitempty"` // Arch Linux
+	Zypper string `json:"zypper,omitempty" yaml:"zypper,omitempty"` // openSUSE
+	Apk    string `json:"apk,omitempty" yaml:"apk,omitempty"`       // Alpine Linux
+
+	// macOS
+	Brew string `json:"brew,omitempty" yaml:"brew,omitempty"` // Homebrew
+	Port string `json:"port,omitempty" yaml:"port,omitempty"` // MacPorts
+
+	// Windows
+	Choco  string `json:"choco,omitempty" yaml:"choco,omitempty"`     // Chocolatey
+	Scoop  string `json:"scoop,omitempty" yaml:"scoop,omitempty"`     // Scoop
+	Winget string `json:"winget,omitempty" yaml:"winget,omitempty"`   // Windows Package Manager
+
+	// 跨平台
+	Go   string `json:"go,omitempty" yaml:"go,omitempty"`     // Go install
+	Pip  string `json:"pip,omitempty" yaml:"pip,omitempty"`   // pip install
+	Pip3 string `json:"pip3,omitempty" yaml:"pip3,omitempty"` // pip3 install
+	Gem  string `json:"gem,omitempty" yaml:"gem,omitempty"`   // gem install
+	Npm  string `json:"npm,omitempty" yaml:"npm,omitempty"`   // npm install
+	Cargo string `json:"cargo,omitempty" yaml:"cargo,omitempty"` // cargo install
+
+	// 源码安装
+	Git    string `json:"git,omitempty" yaml:"git,omitempty"`       // git clone
+	Docker string `json:"docker,omitempty" yaml:"docker,omitempty"` // docker pull
+
+	// 手动安装说明
+	Manual        string `json:"manual,omitempty" yaml:"manual,omitempty"`
+	ManualWindows string `json:"manual_windows,omitempty" yaml:"manual_windows,omitempty"`
+	ManualLinux   string `json:"manual_linux,omitempty" yaml:"manual_linux,omitempty"`
+	ManualMacOS   string `json:"manual_macos,omitempty" yaml:"manual_macos,omitempty"`
 }
 
 // ToolStatus 工具状态
@@ -207,102 +235,117 @@ func (tm *ToolManager) loadDefaultTools() {
 			Name: "Nmap", Binary: "nmap", Category: "portscan",
 			Description: "Network Security Scanner",
 			Install: InstallCmd{
-				Linux:   "sudo apt install nmap -y",
-				MacOS:   "brew install nmap",
-				Windows: "choco install nmap -y OR download from https://nmap.org/download.html",
+				Apt:    "sudo apt install nmap -y",
+				Yum:    "sudo yum install nmap -y",
+				Dnf:    "sudo dnf install nmap -y",
+				Pacman: "sudo pacman -S nmap --noconfirm",
+				Zypper: "sudo zypper install -y nmap",
+				Apk:    "sudo apk add nmap",
+				Brew:   "brew install nmap",
+				Choco:  "choco install nmap -y",
+				Scoop:  "scoop install nmap",
+				ManualWindows: "Download from https://nmap.org/download.html",
 			},
 		},
 		{
 			Name: "Dirsearch", Binary: "dirsearch", Category: "webscan",
 			Description: "Web Path Scanner",
 			Install: InstallCmd{
-				Linux: "sudo apt install dirsearch -y",
-				Pip:   "pip install dirsearch",
+				Apt:  "sudo apt install dirsearch -y",
+				Yum:  "sudo yum install dirsearch -y",
+				Pip:  "pip install dirsearch",
+				Git:  "git clone https://github.com/maurosoria/dirsearch.git",
 			},
 		},
 		{
 			Name: "Dirb", Binary: "dirb", Category: "webscan",
 			Description: "Web Content Scanner",
 			Install: InstallCmd{
-				Linux:   "sudo apt install dirb -y",
-				MacOS:   "brew install dirb",
-				Windows: "Not available on Windows - use gobuster or dirsearch instead",
+				Apt:    "sudo apt install dirb -y",
+				Yum:    "sudo yum install dirb -y",
+				Brew:   "brew install dirb",
+				Manual: "Download from https://dirb.sourceforge.net/",
 			},
 		},
 		{
 			Name: "Gobuster", Binary: "gobuster", Category: "webscan",
 			Description: "Directory/File/DNS Busting Tool",
 			Install: InstallCmd{
-				Linux: "sudo apt install gobuster -y",
-				MacOS: "brew install gobuster",
-				Go:    "go install github.com/OJ/gobuster/v3@latest",
+				Apt:    "sudo apt install gobuster -y",
+				Yum:    "sudo yum install gobuster -y",
+				Brew:   "brew install gobuster",
+				Go:     "go install github.com/OJ/gobuster/v3@latest",
 			},
 		},
 		{
 			Name: "Ffuf", Binary: "ffuf", Category: "webscan",
 			Description: "Fast Web Fuzzer",
 			Install: InstallCmd{
-				Linux: "sudo apt install ffuf -y",
-				Go:    "go install github.com/ffuf/ffuf/v2@latest",
+				Apt: "sudo apt install ffuf -y",
+				Yum: "sudo yum install ffuf -y",
+				Go:  "go install github.com/ffuf/ffuf/v2@latest",
 			},
 		},
 		{
 			Name: "SQLMap", Binary: "sqlmap", Category: "vulnscan",
 			Description: "Automatic SQL Injection Tool",
 			Install: InstallCmd{
-				Linux: "sudo apt install sqlmap -y",
-				Pip:   "pip install sqlmap",
+				Apt:  "sudo apt install sqlmap -y",
+				Yum:  "sudo yum install sqlmap -y",
+				Pip:  "pip install sqlmap",
+				Git:  "git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git",
 			},
 		},
 		{
 			Name: "WPScan", Binary: "wpscan", Category: "webscan",
 			Description: "WordPress Security Scanner",
 			Install: InstallCmd{
-				Linux:   "sudo apt install wpscan -y",
-				MacOS:   "brew install wpscan",
-				Windows: "Requires Ruby: gem install wpscan",
-				Gem:     "gem install wpscan",
+				Apt:    "sudo apt install wpscan -y",
+				Yum:    "sudo yum install wpscan -y",
+				Gem:    "gem install wpscan",
+				Docker: "docker pull wpscanteam/wpscan",
 			},
 		},
 		{
 			Name: "Hydra", Binary: "hydra", Category: "password",
 			Description: "Network Logon Cracker",
 			Install: InstallCmd{
-				Linux:   "sudo apt install hydra -y",
-				MacOS:   "brew install hydra",
-				Windows: "Use WSL or download from https://github.com/vanhauser-thc/thc-hydra",
+				Apt:    "sudo apt install hydra -y",
+				Yum:    "sudo yum install hydra -y",
+				Brew:   "brew install hydra",
+				Manual: "Download from https://github.com/vanhauser-thc/thc-hydra",
 			},
 		},
 		{
 			Name: "Nuclei", Binary: "nuclei", Category: "vulnscan",
 			Description: "Vulnerability Scanner",
 			Install: InstallCmd{
-				Linux: "sudo apt install nuclei -y",
-				Go:    "go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest",
+				Apt: "sudo apt install nuclei -y",
+				Go:  "go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest",
 			},
 		},
 		{
 			Name: "Subfinder", Binary: "subfinder", Category: "subdomain",
 			Description: "Subdomain Discovery Tool",
 			Install: InstallCmd{
-				Linux: "sudo apt install subfinder -y",
-				Go:    "go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest",
+				Apt: "sudo apt install subfinder -y",
+				Go:  "go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest",
 			},
 		},
 		{
 			Name: "Httpx", Binary: "httpx", Category: "recon",
 			Description: "HTTP Toolkit",
 			Install: InstallCmd{
-				Linux: "sudo apt install httpx -y",
-				Go:    "go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest",
+				Apt: "sudo apt install httpx -y",
+				Go:  "go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest",
 			},
 		},
 		{
 			Name: "Dnsx", Binary: "dnsx", Category: "recon",
 			Description: "DNS Toolkit",
 			Install: InstallCmd{
-				Linux: "sudo apt install dnsx -y",
-				Go:    "go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest",
+				Apt: "sudo apt install dnsx -y",
+				Go:  "go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest",
 			},
 		},
 	}
@@ -556,10 +599,28 @@ func (tm *ToolManager) Get(name string) (*Tool, error) {
 func (t *Tool) GetInstallCommand() string {
 	switch runtime.GOOS {
 	case "windows":
-		return t.Install.Windows
+		if t.Install.Choco != "" {
+			return t.Install.Choco
+		}
+		if t.Install.Scoop != "" {
+			return t.Install.Scoop
+		}
+		return t.Install.ManualWindows
 	case "darwin":
-		return t.Install.MacOS
+		if t.Install.Brew != "" {
+			return t.Install.Brew
+		}
+		return t.Install.ManualMacOS
 	default:
-		return t.Install.Linux
+		if t.Install.Apt != "" {
+			return t.Install.Apt
+		}
+		if t.Install.Dnf != "" {
+			return t.Install.Dnf
+		}
+		if t.Install.Yum != "" {
+			return t.Install.Yum
+		}
+		return t.Install.ManualLinux
 	}
 }
