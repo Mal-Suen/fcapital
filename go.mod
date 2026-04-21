@@ -1,4 +1,4 @@
-module github.com/yourname/fcapital
+module github.com/Mal-Suen/fcapital
 
 go 1.21
 

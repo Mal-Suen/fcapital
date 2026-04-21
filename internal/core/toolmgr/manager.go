@@ -13,10 +13,10 @@ import (
 
 // ToolManager 工具管理器
 type ToolManager struct {
-	tools       map[string]*Tool
-	localPath   string
-	extraPaths  []string // 额外搜索路径
-	mu          sync.RWMutex
+	tools      map[string]*Tool
+	localPath  string
+	extraPaths []string // 额外搜索路径
+	mu         sync.RWMutex
 }
 
 // Tool 工具信息
@@ -96,7 +96,7 @@ func NewToolManager() *ToolManager {
 	if runtime.GOOS == "windows" {
 		// Windows 常见路径 - Go 工具优先
 		extraPaths = []string{
-			filepath.Join(homeDir, "go", "bin"),                    // Go 工具 (优先)
+			filepath.Join(homeDir, "go", "bin"), // Go 工具 (优先)
 		}
 
 		// 尝试添加 Python Scripts 路径
@@ -106,7 +106,7 @@ func NewToolManager() *ToolManager {
 
 		// 其他路径
 		extraPaths = append(extraPaths,
-			filepath.Join(homeDir, ".local", "bin"),                // 本地安装
+			filepath.Join(homeDir, ".local", "bin"), // 本地安装
 		)
 	} else {
 		// Linux/macOS
@@ -207,8 +207,8 @@ func (tm *ToolManager) loadDefaultTools() {
 			Name: "Nmap", Binary: "nmap", Category: "portscan",
 			Description: "Network Security Scanner",
 			Install: InstallCmd{
-				Linux: "sudo apt install nmap -y",
-				MacOS: "brew install nmap",
+				Linux:   "sudo apt install nmap -y",
+				MacOS:   "brew install nmap",
 				Windows: "choco install nmap -y OR download from https://nmap.org/download.html",
 			},
 		},
@@ -217,15 +217,15 @@ func (tm *ToolManager) loadDefaultTools() {
 			Description: "Web Path Scanner",
 			Install: InstallCmd{
 				Linux: "sudo apt install dirsearch -y",
-				Pip: "pip install dirsearch",
+				Pip:   "pip install dirsearch",
 			},
 		},
 		{
 			Name: "Dirb", Binary: "dirb", Category: "webscan",
 			Description: "Web Content Scanner",
 			Install: InstallCmd{
-				Linux: "sudo apt install dirb -y",
-				MacOS: "brew install dirb",
+				Linux:   "sudo apt install dirb -y",
+				MacOS:   "brew install dirb",
 				Windows: "Not available on Windows - use gobuster or dirsearch instead",
 			},
 		},
@@ -235,7 +235,7 @@ func (tm *ToolManager) loadDefaultTools() {
 			Install: InstallCmd{
 				Linux: "sudo apt install gobuster -y",
 				MacOS: "brew install gobuster",
-				Go: "go install github.com/OJ/gobuster/v3@latest",
+				Go:    "go install github.com/OJ/gobuster/v3@latest",
 			},
 		},
 		{
@@ -243,7 +243,7 @@ func (tm *ToolManager) loadDefaultTools() {
 			Description: "Fast Web Fuzzer",
 			Install: InstallCmd{
 				Linux: "sudo apt install ffuf -y",
-				Go: "go install github.com/ffuf/ffuf/v2@latest",
+				Go:    "go install github.com/ffuf/ffuf/v2@latest",
 			},
 		},
 		{
@@ -251,25 +251,25 @@ func (tm *ToolManager) loadDefaultTools() {
 			Description: "Automatic SQL Injection Tool",
 			Install: InstallCmd{
 				Linux: "sudo apt install sqlmap -y",
-				Pip: "pip install sqlmap",
+				Pip:   "pip install sqlmap",
 			},
 		},
 		{
 			Name: "WPScan", Binary: "wpscan", Category: "webscan",
 			Description: "WordPress Security Scanner",
 			Install: InstallCmd{
-				Linux: "sudo apt install wpscan -y",
-				MacOS: "brew install wpscan",
+				Linux:   "sudo apt install wpscan -y",
+				MacOS:   "brew install wpscan",
 				Windows: "Requires Ruby: gem install wpscan",
-				Gem: "gem install wpscan",
+				Gem:     "gem install wpscan",
 			},
 		},
 		{
 			Name: "Hydra", Binary: "hydra", Category: "password",
 			Description: "Network Logon Cracker",
 			Install: InstallCmd{
-				Linux: "sudo apt install hydra -y",
-				MacOS: "brew install hydra",
+				Linux:   "sudo apt install hydra -y",
+				MacOS:   "brew install hydra",
 				Windows: "Use WSL or download from https://github.com/vanhauser-thc/thc-hydra",
 			},
 		},
@@ -278,7 +278,7 @@ func (tm *ToolManager) loadDefaultTools() {
 			Description: "Vulnerability Scanner",
 			Install: InstallCmd{
 				Linux: "sudo apt install nuclei -y",
-				Go: "go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest",
+				Go:    "go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest",
 			},
 		},
 		{
@@ -286,7 +286,7 @@ func (tm *ToolManager) loadDefaultTools() {
 			Description: "Subdomain Discovery Tool",
 			Install: InstallCmd{
 				Linux: "sudo apt install subfinder -y",
-				Go: "go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest",
+				Go:    "go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest",
 			},
 		},
 		{
@@ -294,7 +294,7 @@ func (tm *ToolManager) loadDefaultTools() {
 			Description: "HTTP Toolkit",
 			Install: InstallCmd{
 				Linux: "sudo apt install httpx -y",
-				Go: "go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest",
+				Go:    "go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest",
 			},
 		},
 		{
@@ -302,7 +302,7 @@ func (tm *ToolManager) loadDefaultTools() {
 			Description: "DNS Toolkit",
 			Install: InstallCmd{
 				Linux: "sudo apt install dnsx -y",
-				Go: "go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest",
+				Go:    "go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest",
 			},
 		},
 	}

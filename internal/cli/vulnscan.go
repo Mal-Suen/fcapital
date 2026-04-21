@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Mal-Suen/fcapital/internal/modules/vulnscan"
 	"github.com/spf13/cobra"
-	"github.com/yourname/fcapital/internal/modules/vulnscan"
 )
 
 var vulnscanCmd = &cobra.Command{

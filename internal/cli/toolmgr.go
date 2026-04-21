@@ -3,7 +3,7 @@ package cli
 import (
 	"sync"
 
-	"github.com/yourname/fcapital/internal/core/toolmgr"
+	"github.com/Mal-Suen/fcapital/internal/core/toolmgr"
 )
 
 var (

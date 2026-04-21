@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/yourname/fcapital/internal/modules/utils"
+	"github.com/Mal-Suen/fcapital/internal/modules/utils"
 )
 
 func runInteractive() {

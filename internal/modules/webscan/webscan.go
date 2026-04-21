@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yourname/fcapital/internal/core/toolmgr"
+	"github.com/Mal-Suen/fcapital/internal/core/toolmgr"
 )
 
 // DirResult 目录扫描结果

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/yourname/fcapital/internal/cli"
+	"github.com/Mal-Suen/fcapital/internal/cli"
 )
 
 var (

@@ -76,7 +76,7 @@ fcapital is a penetration testing framework that integrates multiple security to
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourname/fcapital.git
+git clone https://github.com/Mal-Suen/fcapital.git
 cd fcapital
 
 # Install dependencies
@@ -92,7 +92,7 @@ make build
 ### Using Go Install
 
 ```bash
-go install github.com/yourname/fcapital/cmd/fcapital@latest
+go install github.com/Mal-Suen/fcapital/cmd/fcapital@latest
 ```
 
 ---
@@ -200,6 +200,22 @@ modules:
     default_tool: "dirsearch"
     wordlist: "configs/wordlists/dirs.txt"
 ```
+
+---
+
+## 🔑 API Keys Configuration
+
+Some tools require API keys for full functionality:
+
+### subfinder
+Edit `~/.config/subfinder/provider-config.yaml` to add API keys for various sources:
+- Shodan, Censys, VirusTotal, SecurityTrails, etc.
+
+### nuclei
+Nuclei templates are downloaded automatically. Custom templates can be added to `~/.config/nuclei/templates/`.
+
+### httpx
+No API keys required for basic usage.
 
 ---
 

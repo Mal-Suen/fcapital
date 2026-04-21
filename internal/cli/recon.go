@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Mal-Suen/fcapital/internal/modules/recon"
 	"github.com/spf13/cobra"
-	"github.com/yourname/fcapital/internal/modules/recon"
 )
 
 var reconCmd = &cobra.Command{

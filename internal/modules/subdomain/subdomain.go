@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yourname/fcapital/internal/core/toolmgr"
+	"github.com/Mal-Suen/fcapital/internal/core/toolmgr"
 )
 
 // SubfinderRunner subfinder 运行器
@@ -32,13 +32,13 @@ func NewSubfinderRunner(tm *toolmgr.ToolManager) (*SubfinderRunner, error) {
 
 // SubfinderOptions subfinder 选项
 type SubfinderOptions struct {
-	Threads      int           // 线程数
-	Timeout      time.Duration // 超时时间
-	Sources      []string      // 数据源
-	Exclude      []string      // 排除的数据源
-	Recursive    bool          // 递归枚举
-	All          bool          // 使用所有数据源
-	Silent       bool          // 静默模式
+	Threads   int           // 线程数
+	Timeout   time.Duration // 超时时间
+	Sources   []string      // 数据源
+	Exclude   []string      // 排除的数据源
+	Recursive bool          // 递归枚举
+	All       bool          // 使用所有数据源
+	Silent    bool          // 静默模式
 }
 
 // Enumerate 枚举子域名

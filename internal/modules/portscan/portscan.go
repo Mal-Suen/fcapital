@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yourname/fcapital/internal/core/toolmgr"
+	"github.com/Mal-Suen/fcapital/internal/core/toolmgr"
 )
 
 // NmapResult nmap 扫描结果

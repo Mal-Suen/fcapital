@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Mal-Suen/fcapital/internal/modules/webscan"
 	"github.com/spf13/cobra"
-	"github.com/yourname/fcapital/internal/modules/webscan"
 )
 
 var webscanCmd = &cobra.Command{

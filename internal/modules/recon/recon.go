@@ -7,24 +7,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yourname/fcapital/internal/core/toolmgr"
+	"github.com/Mal-Suen/fcapital/internal/core/toolmgr"
 )
 
 // HTTPXResult httpx 扫描结果
 type HTTPXResult struct {
-	URL          string   `json:"url"`
-	Host         string   `json:"host"`
-	Port         string   `json:"port"`
-	Scheme       string   `json:"scheme"`
-	Title        string   `json:"title"`
-	StatusCode   int      `json:"status_code"`
-	ContentLength int     `json:"content_length"`
-	WebServer    string   `json:"webserver"`
-	ContentType  string   `json:"content_type"`
-	CDN          bool     `json:"cdn"`
-	Technologies []string `json:"tech"`
-	ResponseTime string   `json:"time"`
-	Input        string   `json:"input"`
+	URL           string   `json:"url"`
+	Host          string   `json:"host"`
+	Port          string   `json:"port"`
+	Scheme        string   `json:"scheme"`
+	Title         string   `json:"title"`
+	StatusCode    int      `json:"status_code"`
+	ContentLength int      `json:"content_length"`
+	WebServer     string   `json:"webserver"`
+	ContentType   string   `json:"content_type"`
+	CDN           bool     `json:"cdn"`
+	Technologies  []string `json:"tech"`
+	ResponseTime  string   `json:"time"`
+	Input         string   `json:"input"`
 }
 
 // DNSXResult dnsx 查询结果

@@ -3,9 +3,10 @@ package cli
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/Mal-Suen/fcapital/internal/modules/subdomain"
 	"github.com/spf13/cobra"
-	"github.com/yourname/fcapital/internal/modules/subdomain"
 )
 
 var subdomainCmd = &cobra.Command{
@@ -35,6 +36,10 @@ var subdomainPassiveCmd = &cobra.Command{
 
 		fmt.Printf("[*] Running passive subdomain enumeration on %s...\n\n", domain)
 
+		// 创建带超时的上下文
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+
 		// 执行枚举
 		runner, err := subdomain.NewSubfinderRunner(tm)
 		if err != nil {
@@ -42,7 +47,13 @@ var subdomainPassiveCmd = &cobra.Command{
 			return
 		}
 
-		results, err := runner.Enumerate(context.Background(), domain, nil)
+		// 设置选项，包含超时
+		opts := &subdomain.SubfinderOptions{
+			Timeout: 30 * time.Second,
+			Silent:  true,
+		}
+
+		results, err := runner.Enumerate(ctx, domain, opts)
 		if err != nil {
 			red.Printf("[!] Subdomain enumeration failed: %v\n", err)
 			return

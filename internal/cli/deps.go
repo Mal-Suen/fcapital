@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"text/tabwriter"
 
+	"github.com/Mal-Suen/fcapital/internal/core/toolmgr"
 	"github.com/spf13/cobra"
-	"github.com/yourname/fcapital/internal/core/toolmgr"
 )
 
 var depsCmd = &cobra.Command{

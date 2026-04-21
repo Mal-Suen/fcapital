@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yourname/fcapital/internal/core/toolmgr"
+	"github.com/Mal-Suen/fcapital/internal/core/toolmgr"
 )
 
 // NucleiResult nuclei 扫描结果
@@ -22,13 +22,13 @@ type NucleiResult struct {
 
 // NucleiOptions nuclei 扫描选项
 type NucleiOptions struct {
-	Templates   []string      // 模板目录
-	Tags        []string      // 标签过滤
-	Severity    []string      // 严重级别过滤
-	Threads     int           // 线程数
-	Timeout     time.Duration // 超时时间
-	RateLimit   int           // 速率限制
-	Silent      bool          // 静默模式
+	Templates []string      // 模板目录
+	Tags      []string      // 标签过滤
+	Severity  []string      // 严重级别过滤
+	Threads   int           // 线程数
+	Timeout   time.Duration // 超时时间
+	RateLimit int           // 速率限制
+	Silent    bool          // 静默模式
 }
 
 // NucleiRunner nuclei 运行器
@@ -173,15 +173,15 @@ type SQLMapResult struct {
 
 // SQLMapOptions sqlmap 扫描选项
 type SQLMapOptions struct {
-	Data        string        // POST 数据
-	Cookie      string        // Cookie
-	Level       int           // 测试级别 (1-5)
-	Risk        int           // 风险级别 (1-3)
-	Threads     int           // 线程数
-	Techniques  string        // 注入技术
-	DBMS        string        // 指定 DBMS
-	RandomAgent bool          // 随机 User-Agent
-	Batch       bool          // 非交互模式
+	Data        string // POST 数据
+	Cookie      string // Cookie
+	Level       int    // 测试级别 (1-5)
+	Risk        int    // 风险级别 (1-3)
+	Threads     int    // 线程数
+	Techniques  string // 注入技术
+	DBMS        string // 指定 DBMS
+	RandomAgent bool   // 随机 User-Agent
+	Batch       bool   // 非交互模式
 }
 
 // SQLMapRunner sqlmap 运行器
