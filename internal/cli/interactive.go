@@ -16,14 +16,19 @@ func runInteractive() {
 
 	reader := bufio.NewReader(os.Stdin)
 
-	// 初始化工具管理器
+	// ????????
 	InitToolManager()
 
 	for {
 		printMenu()
 		fmt.Print("  >> Enter your choice: ")
 
-		input, _ := reader.ReadString('\n')
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			// ???????? EOF???
+			fmt.Println("\n  [*] Exiting...")
+			return
+		}
 		input = strings.TrimSpace(input)
 
 		choice, err := strconv.Atoi(input)
@@ -68,26 +73,26 @@ func runReconInteractive(reader *bufio.Reader) {
 	fmt.Println()
 	fmt.Print("  >> Enter your choice: ")
 
-	input, _ := reader.ReadString('\n')
+	input := readInput(reader)
 	input = strings.TrimSpace(input)
 
 	switch input {
 	case "1":
 		fmt.Print("  >> Enter target (domain/IP): ")
-		target, _ := reader.ReadString('\n')
+		target := readInput(reader)
 		target = strings.TrimSpace(target)
 		if target != "" {
 			fmt.Printf("\n  [*] Running HTTP probe on %s...\n", target)
-			// TODO: 调用 httpx
+			// TODO: ?? httpx
 			green.Println("  [+] HTTP probe completed (placeholder)")
 		}
 	case "2":
 		fmt.Print("  >> Enter domain: ")
-		domain, _ := reader.ReadString('\n')
+		domain := readInput(reader)
 		domain = strings.TrimSpace(domain)
 		if domain != "" {
 			fmt.Printf("\n  [*] Running DNS query on %s...\n", domain)
-			// TODO: 调用 dnsx
+			// TODO: ?? dnsx
 			green.Println("  [+] DNS query completed (placeholder)")
 		}
 	case "0":
@@ -104,17 +109,17 @@ func runSubdomainInteractive(reader *bufio.Reader) {
 	fmt.Println()
 	fmt.Print("  >> Enter your choice: ")
 
-	input, _ := reader.ReadString('\n')
+	input := readInput(reader)
 	input = strings.TrimSpace(input)
 
 	switch input {
 	case "1":
 		fmt.Print("  >> Enter domain: ")
-		domain, _ := reader.ReadString('\n')
+		domain := readInput(reader)
 		domain = strings.TrimSpace(domain)
 		if domain != "" {
 			fmt.Printf("\n  [*] Running subdomain enumeration on %s...\n", domain)
-			// TODO: 调用 subfinder
+			// TODO: ?? subfinder
 			green.Println("  [+] Subdomain enumeration completed (placeholder)")
 		}
 	case "0":
@@ -133,38 +138,38 @@ func runPortscanInteractive(reader *bufio.Reader) {
 	fmt.Println()
 	fmt.Print("  >> Enter your choice: ")
 
-	input, _ := reader.ReadString('\n')
+	input := readInput(reader)
 	input = strings.TrimSpace(input)
 
 	switch input {
 	case "1":
 		fmt.Print("  >> Enter target: ")
-		target, _ := reader.ReadString('\n')
+		target := readInput(reader)
 		target = strings.TrimSpace(target)
 		if target != "" {
 			fmt.Printf("\n  [*] Running quick port scan on %s...\n", target)
-			// TODO: 调用 nmap
+			// TODO: ?? nmap
 			green.Println("  [+] Port scan completed (placeholder)")
 		}
 	case "2":
 		fmt.Print("  >> Enter target: ")
-		target, _ := reader.ReadString('\n')
+		target := readInput(reader)
 		target = strings.TrimSpace(target)
 		if target != "" {
 			fmt.Printf("\n  [*] Running full port scan on %s...\n", target)
-			// TODO: 调用 nmap
+			// TODO: ?? nmap
 			green.Println("  [+] Port scan completed (placeholder)")
 		}
 	case "3":
 		fmt.Print("  >> Enter target: ")
-		target, _ := reader.ReadString('\n')
+		target := readInput(reader)
 		target = strings.TrimSpace(target)
 		fmt.Print("  >> Enter port range (e.g., 1-1000): ")
-		ports, _ := reader.ReadString('\n')
+		ports := readInput(reader)
 		ports = strings.TrimSpace(ports)
 		if target != "" && ports != "" {
 			fmt.Printf("\n  [*] Running port scan on %s (ports: %s)...\n", target, ports)
-			// TODO: 调用 nmap
+			// TODO: ?? nmap
 			green.Println("  [+] Port scan completed (placeholder)")
 		}
 	case "0":
@@ -183,17 +188,17 @@ func runWebscanInteractive(reader *bufio.Reader) {
 	fmt.Println()
 	fmt.Print("  >> Enter your choice: ")
 
-	input, _ := reader.ReadString('\n')
+	input := readInput(reader)
 	input = strings.TrimSpace(input)
 
 	switch input {
 	case "1", "2", "3":
 		fmt.Print("  >> Enter target URL: ")
-		target, _ := reader.ReadString('\n')
+		target := readInput(reader)
 		target = strings.TrimSpace(target)
 		if target != "" {
 			fmt.Printf("\n  [*] Running directory scan on %s...\n", target)
-			// TODO: 调用相应工具
+			// TODO: ??????
 			green.Println("  [+] Directory scan completed (placeholder)")
 		}
 	case "0":
@@ -211,26 +216,26 @@ func runVulnscanInteractive(reader *bufio.Reader) {
 	fmt.Println()
 	fmt.Print("  >> Enter your choice: ")
 
-	input, _ := reader.ReadString('\n')
+	input := readInput(reader)
 	input = strings.TrimSpace(input)
 
 	switch input {
 	case "1":
 		fmt.Print("  >> Enter target URL: ")
-		target, _ := reader.ReadString('\n')
+		target := readInput(reader)
 		target = strings.TrimSpace(target)
 		if target != "" {
 			fmt.Printf("\n  [*] Running Nuclei scan on %s...\n", target)
-			// TODO: 调用 nuclei
+			// TODO: ?? nuclei
 			green.Println("  [+] Nuclei scan completed (placeholder)")
 		}
 	case "2":
 		fmt.Print("  >> Enter target URL: ")
-		target, _ := reader.ReadString('\n')
+		target := readInput(reader)
 		target = strings.TrimSpace(target)
 		if target != "" {
 			fmt.Printf("\n  [*] Running SQLMap on %s...\n", target)
-			// TODO: 调用 sqlmap
+			// TODO: ?? sqlmap
 			green.Println("  [+] SQLMap scan completed (placeholder)")
 		}
 	case "0":
@@ -247,17 +252,17 @@ func runPasswordInteractive(reader *bufio.Reader) {
 	fmt.Println()
 	fmt.Print("  >> Enter your choice: ")
 
-	input, _ := reader.ReadString('\n')
+	input := readInput(reader)
 	input = strings.TrimSpace(input)
 
 	switch input {
 	case "1":
 		fmt.Print("  >> Enter target: ")
-		target, _ := reader.ReadString('\n')
+		target := readInput(reader)
 		target = strings.TrimSpace(target)
 		if target != "" {
 			fmt.Printf("\n  [*] Running Hydra on %s...\n", target)
-			// TODO: 调用 hydra
+			// TODO: ?? hydra
 			green.Println("  [+] Hydra completed (placeholder)")
 		}
 	case "0":
@@ -276,23 +281,23 @@ func runUtilsInteractive(reader *bufio.Reader) {
 	fmt.Println()
 	fmt.Print("  >> Enter your choice: ")
 
-	input, _ := reader.ReadString('\n')
+	input := readInput(reader)
 	input = strings.TrimSpace(input)
 
 	switch input {
 	case "1":
 		fmt.Print("  >> Enter string: ")
-		str, _ := reader.ReadString('\n')
+		str := readInput(reader)
 		str = strings.TrimSpace(str)
 		fmt.Printf("\n  [+] Base64 encoded: %s\n", base64Encode(str))
 	case "2":
 		fmt.Print("  >> Enter string: ")
-		str, _ := reader.ReadString('\n')
+		str := readInput(reader)
 		str = strings.TrimSpace(str)
 		fmt.Printf("\n  [+] URL encoded: %s\n", urlEncode(str))
 	case "3":
 		fmt.Print("  >> Enter string: ")
-		str, _ := reader.ReadString('\n')
+		str := readInput(reader)
 		str = strings.TrimSpace(str)
 		fmt.Printf("\n  [+] MD5: %s\n", md5Hash(str))
 		fmt.Printf("  [+] SHA256: %s\n", sha256Hash(str))
@@ -306,7 +311,16 @@ func runDepsCheckInteractive() {
 	runDepsCheck(nil, nil)
 }
 
-// 辅助函数
+// readInput ??????
+func readInput(reader *bufio.Reader) string {
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return ""
+	}
+	return input
+}
+
+// ????
 func base64Encode(s string) string {
 	return utils.Base64Encode(s)
 }

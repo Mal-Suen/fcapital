@@ -238,19 +238,9 @@ func (e *Engine) Execute(ctx context.Context, workflowName string, target string
 				continue
 			}
 
-			// 设置超时
-			stepCtx := ctx
-			if step.Timeout > 0 {
-				var cancel context.CancelFunc
-				stepCtx, cancel = context.WithTimeout(ctx, step.Timeout)
-				defer cancel()
-			}
+			// 设置超时并执行步骤
+			output, err := e.executeStep(ctx, step, handler, execCtx, stepResult)
 
-			// 打印步骤开始信息
-			fmt.Printf("\n[*] Running step: %s (%s/%s)\n", step.Name, step.Module, step.Action)
-
-			// 执行
-			output, err := handler.Execute(stepCtx, step, execCtx)
 			stepResult.EndTime = time.Now()
 			stepResult.Duration = stepResult.EndTime.Sub(stepResult.StartTime).String()
 
@@ -296,6 +286,21 @@ func (e *Engine) Execute(ctx context.Context, workflowName string, target string
 	e.saveResult(result, resultFile)
 
 	return result, nil
+}
+
+// executeStep 执行单个步骤（独立函数以正确处理 context cancel）
+func (e *Engine) executeStep(ctx context.Context, step *Step, handler StepHandler, execCtx *ExecutionContext, stepResult *StepResult) (interface{}, error) {
+	// 打印步骤开始信息
+	fmt.Printf("\n[*] Running step: %s (%s/%s)\n", step.Name, step.Module, step.Action)
+
+	// 设置超时
+	if step.Timeout > 0 {
+		stepCtx, cancel := context.WithTimeout(ctx, step.Timeout)
+		defer cancel()
+		return handler.Execute(stepCtx, step, execCtx)
+	}
+
+	return handler.Execute(ctx, step, execCtx)
 }
 
 // saveResult 保存结果

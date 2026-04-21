@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Mal-Suen/fcapital/internal/modules/vulnscan"
 	"github.com/spf13/cobra"
@@ -41,10 +42,10 @@ var vulnscanNucleiCmd = &cobra.Command{
 		// 构建选项
 		opts := &vulnscan.NucleiOptions{}
 		if tags != "" {
-			opts.Tags = splitByComma(tags)
+			opts.Tags = strings.Split(tags, ",")
 		}
 		if severity != "" {
-			opts.Severity = splitByComma(severity)
+			opts.Severity = strings.Split(severity, ",")
 		}
 
 		// 执行扫描

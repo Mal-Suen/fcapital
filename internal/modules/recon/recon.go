@@ -79,7 +79,17 @@ type HTTPOptions struct {
 func (r *HTTPXRunner) Probe(ctx context.Context, targets []string, opts *HTTPOptions) ([]HTTPXResult, error) {
 	args := r.buildArgs(targets, opts)
 
-	result, err := r.runner.Run(ctx, args)
+	var result *toolmgr.RunResult
+	var err error
+
+	// 多目标通过 stdin 传递
+	if len(targets) > 1 {
+		targetInput := strings.Join(targets, "\n")
+		result, err = r.runner.RunWithStdin(ctx, args, targetInput)
+	} else {
+		result, err = r.runner.Run(ctx, args)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("httpx execution failed: %w", err)
 	}
@@ -93,24 +103,33 @@ func (r *HTTPXRunner) ProbeWithProgress(ctx context.Context, targets []string, o
 
 	var results []HTTPXResult
 
-	result, err := r.runner.RunWithProgress(ctx, args, func(line string) {
-		// 尝试解析每行 JSON
-		var httpxResult HTTPXResult
-		if err := json.Unmarshal([]byte(line), &httpxResult); err == nil {
-			results = append(results, httpxResult)
-			if progressFn != nil {
-				progressFn(httpxResult)
-			}
+	// 多目标通过 stdin 传递
+	if len(targets) > 1 {
+		targetInput := strings.Join(targets, "\n")
+		result, err := r.runner.RunWithStdin(ctx, args, targetInput)
+		if err != nil {
+			return nil, fmt.Errorf("httpx execution failed: %w", err)
 		}
-	})
-
-	if err != nil {
-		return nil, fmt.Errorf("httpx execution failed: %w", err)
-	}
-
-	// 如果没有通过进度回调解析，尝试解析完整输出
-	if len(results) == 0 {
 		results = r.parseOutput(result.Output)
+	} else {
+		result, err := r.runner.RunWithProgress(ctx, args, func(line string) {
+			// 尝试解析每行 JSON
+			var httpxResult HTTPXResult
+			if err := json.Unmarshal([]byte(line), &httpxResult); err == nil {
+				results = append(results, httpxResult)
+				if progressFn != nil {
+					progressFn(httpxResult)
+				}
+			}
+		})
+		if err != nil {
+			return nil, fmt.Errorf("httpx execution failed: %w", err)
+		}
+
+		// 如果没有通过进度回调解析，尝试解析完整输出
+		if len(results) == 0 {
+			results = r.parseOutput(result.Output)
+		}
 	}
 
 	return results, nil

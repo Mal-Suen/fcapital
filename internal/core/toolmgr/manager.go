@@ -135,6 +135,9 @@ func NewToolManager() *ToolManager {
 		// 其他路径
 		extraPaths = append(extraPaths,
 			filepath.Join(homeDir, ".local", "bin"), // 本地安装
+			// Nmap 默认安装路径
+			"C:\\Program Files (x86)\\Nmap",
+			"C:\\Program Files\\Nmap",
 		)
 	} else {
 		// Linux/macOS
@@ -155,31 +158,70 @@ func NewToolManager() *ToolManager {
 
 // findPythonScriptsPath 查找 Python Scripts 路径
 func findPythonScriptsPath() string {
-	// 尝试常见路径
-	commonPaths := []string{
-		// 用户 pip 安装路径 (优先)
-		"D:\\AppData\\Temp\\Python\\Python313\\Scripts",
-		"D:\\AppData\\Temp\\Python\\Python312\\Scripts",
-		// Anaconda 路径
-		"D:\\ProgramData\\anaconda3\\Scripts",
-		"C:\\ProgramData\\anaconda3\\Scripts",
-		// 系统 Python 路径
-		"C:\\Program Files\\Python313\\Scripts",
-		"C:\\Program Files\\Python312\\Scripts",
-		"C:\\Program Files\\Python311\\Scripts",
-		"C:\\Python313\\Scripts",
-		"C:\\Python312\\Scripts",
+	// 方法1: 通过 where/which 命令查找 python
+	var pythonPath string
+	if runtime.GOOS == "windows" {
+		if output, err := exec.Command("where", "python").Output(); err == nil {
+			lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+			if len(lines) > 0 {
+				pythonPath = strings.TrimSpace(lines[0])
+			}
+		}
+	} else {
+		if output, err := exec.Command("which", "python3").Output(); err == nil {
+			pythonPath = strings.TrimSpace(string(output))
+		} else if output, err := exec.Command("which", "python").Output(); err == nil {
+			pythonPath = strings.TrimSpace(string(output))
+		}
 	}
 
-	homeDir, _ := os.UserHomeDir()
-	// 添加用户目录下的路径
-	userPaths := []string{
-		filepath.Join(homeDir, "AppData", "Local", "Programs", "Python", "Python313", "Scripts"),
-		filepath.Join(homeDir, "AppData", "Local", "Programs", "Python", "Python312", "Scripts"),
-		filepath.Join(homeDir, "AppData", "Roaming", "Python", "Python313", "Scripts"),
-		filepath.Join(homeDir, ".local", "bin"),
+	// 从 python 可执行文件路径推断 Scripts 目录
+	if pythonPath != "" {
+		dir := filepath.Dir(pythonPath)
+		scriptsDir := filepath.Join(dir, "Scripts")
+		if _, err := os.Stat(scriptsDir); err == nil {
+			return scriptsDir
+		}
+		// 某些安装方式 Scripts 和 python 在同一目录
+		if _, err := os.Stat(dir); err == nil {
+			return dir
+		}
 	}
-	commonPaths = append(commonPaths, userPaths...)
+
+	// 方法2: 检查常见路径
+	homeDir, _ := os.UserHomeDir()
+	var commonPaths []string
+
+	if runtime.GOOS == "windows" {
+		commonPaths = []string{
+			// 用户 AppData 路径
+			filepath.Join(homeDir, "AppData", "Local", "Programs", "Python", "Python313", "Scripts"),
+			filepath.Join(homeDir, "AppData", "Local", "Programs", "Python", "Python312", "Scripts"),
+			filepath.Join(homeDir, "AppData", "Local", "Programs", "Python", "Python311", "Scripts"),
+			filepath.Join(homeDir, "AppData", "Roaming", "Python", "Python313", "Scripts"),
+			filepath.Join(homeDir, "AppData", "Roaming", "Python", "Python312", "Scripts"),
+			// Anaconda 路径
+			filepath.Join(homeDir, "anaconda3", "Scripts"),
+			filepath.Join(homeDir, "miniconda3", "Scripts"),
+			"C:\\ProgramData\\anaconda3\\Scripts",
+			"C:\\ProgramData\\miniconda3\\Scripts",
+			// 系统 Python 路径
+			"C:\\Program Files\\Python313\\Scripts",
+			"C:\\Program Files\\Python312\\Scripts",
+			"C:\\Python313\\Scripts",
+			"C:\\Python312\\Scripts",
+		}
+	} else {
+		commonPaths = []string{
+			filepath.Join(homeDir, ".local", "bin"),
+			"/usr/local/bin",
+			"/usr/bin",
+			filepath.Join(homeDir, "anaconda3", "bin"),
+			filepath.Join(homeDir, "miniconda3", "bin"),
+			"/opt/homebrew/bin",
+			"/usr/local/anaconda3/bin",
+		}
+	}
 
 	for _, p := range commonPaths {
 		if _, err := os.Stat(p); err == nil {
@@ -244,6 +286,7 @@ func (tm *ToolManager) loadDefaultTools() {
 				Brew:   "brew install nmap",
 				Choco:  "choco install nmap -y",
 				Scoop:  "scoop install nmap",
+				Winget: "Insecure.Nmap",
 				ManualWindows: "Download from https://nmap.org/download.html",
 			},
 		},

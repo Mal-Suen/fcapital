@@ -131,8 +131,13 @@ func (r *Runner) RunWithProgress(ctx context.Context, args []string, progressFn 
 	}
 
 	if err := cmd.Start(); err != nil {
+		// 关闭 stdout 管道防止资源泄漏
+		stdout.Close()
 		return nil, err
 	}
+
+	// 确保在函数结束时关闭管道
+	defer stdout.Close()
 
 	// 实时读取输出
 	var outputBuilder strings.Builder

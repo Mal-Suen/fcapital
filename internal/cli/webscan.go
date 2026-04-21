@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Mal-Suen/fcapital/internal/modules/webscan"
 	"github.com/spf13/cobra"
@@ -142,8 +143,8 @@ func splitExtensions(ext string) []string {
 	}
 	// 移除空格并按逗号分割
 	exts := make([]string, 0)
-	for _, e := range splitByComma(ext) {
-		e = trimSpace(e)
+	for _, e := range strings.Split(ext, ",") {
+		e = strings.TrimSpace(e)
 		if e != "" {
 			if e[0] != '.' {
 				e = "." + e
@@ -152,31 +153,6 @@ func splitExtensions(ext string) []string {
 		}
 	}
 	return exts
-}
-
-func splitByComma(s string) []string {
-	result := make([]string, 0)
-	start := 0
-	for i := 0; i < len(s); i++ {
-		if s[i] == ',' {
-			result = append(result, s[start:i])
-			start = i + 1
-		}
-	}
-	result = append(result, s[start:])
-	return result
-}
-
-func trimSpace(s string) string {
-	start := 0
-	end := len(s)
-	for start < end && (s[start] == ' ' || s[start] == '\t') {
-		start++
-	}
-	for end > start && (s[end-1] == ' ' || s[end-1] == '\t') {
-		end--
-	}
-	return s[start:end]
 }
 
 func init() {

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -283,7 +282,8 @@ func installWindows(tool *toolmgr.Tool) error {
 	// Winget
 	if install.Winget != "" && hasCommand("winget") {
 		fmt.Printf("    [*] Trying Winget...\n")
-		if err := runCommand("winget", "install", "--id", tool.Binary, "-e", "--accept-source-agreements", "--accept-package-agreements"); err != nil {
+		// Winget 需要使用包 ID
+		if err := runCommand("winget", "install", "--id", install.Winget, "-e", "--accept-source-agreements", "--accept-package-agreements"); err != nil {
 			fmt.Printf("    [!] Winget failed: %v\n", err)
 		} else {
 			green.Println("    [+] Winget install successful!")
@@ -535,13 +535,4 @@ func runCommand(name string, args ...string) error {
 func hasCommand(name string) bool {
 	_, err := exec.LookPath(name)
 	return err == nil
-}
-
-// confirmInstall 确认安装
-func confirmInstall(tool string) bool {
-	fmt.Printf("    Install %s? [y/N]: ", tool)
-	reader := bufio.NewReader(os.Stdin)
-	response, _ := reader.ReadString('\n')
-	response = strings.TrimSpace(strings.ToLower(response))
-	return response == "y" || response == "yes"
 }

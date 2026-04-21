@@ -14,6 +14,37 @@ import (
 	"github.com/Mal-Suen/fcapital/internal/modules/webscan"
 )
 
+// getTargetsFromStep 从步骤结果中获取目标列表（公共函数）
+func getTargetsFromStep(step *Step, execCtx *ExecutionContext) []string {
+	if step.InputFrom == "" {
+		return nil
+	}
+
+	prevResult, ok := execCtx.StepResults[step.InputFrom]
+	if !ok || prevResult.Output == nil {
+		return nil
+	}
+
+	output, ok := prevResult.Output.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	fieldData, ok := output[step.InputField]
+	if !ok {
+		return nil
+	}
+
+	switch v := fieldData.(type) {
+	case []string:
+		return v
+	case string:
+		return []string{v}
+	default:
+		return nil
+	}
+}
+
 // ReconHandler 信息收集处理器
 type ReconHandler struct {
 	tm *toolmgr.ToolManager
@@ -41,7 +72,7 @@ func (h *ReconHandler) executeHTTPProbe(ctx context.Context, step *Step, execCtx
 	}
 
 	// 获取目标列表
-	targets := h.getTargets(step, execCtx)
+	targets := getTargetsFromStep(step, execCtx)
 	if len(targets) == 0 {
 		targets = []string{execCtx.Target}
 	}
@@ -92,36 +123,6 @@ func (h *ReconHandler) executeDNSQuery(ctx context.Context, step *Step, execCtx 
 	}
 
 	return result, nil
-}
-
-func (h *ReconHandler) getTargets(step *Step, execCtx *ExecutionContext) []string {
-	if step.InputFrom == "" {
-		return nil
-	}
-
-	prevResult, ok := execCtx.StepResults[step.InputFrom]
-	if !ok || prevResult.Output == nil {
-		return nil
-	}
-
-	output, ok := prevResult.Output.(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	fieldData, ok := output[step.InputField]
-	if !ok {
-		return nil
-	}
-
-	switch v := fieldData.(type) {
-	case []string:
-		return v
-	case string:
-		return []string{v}
-	default:
-		return nil
-	}
 }
 
 // SubdomainHandler 子域名枚举处理器
@@ -255,7 +256,7 @@ func (h *WebscanHandler) Execute(ctx context.Context, step *Step, execCtx *Execu
 
 func (h *WebscanHandler) executeDirScan(ctx context.Context, step *Step, execCtx *ExecutionContext) (interface{}, error) {
 	// 获取目标URL列表
-	targets := h.getTargets(step, execCtx)
+	targets := getTargetsFromStep(step, execCtx)
 	if len(targets) == 0 {
 		targets = []string{execCtx.Target}
 	}
@@ -315,36 +316,6 @@ func (h *WebscanHandler) executeDirScan(ctx context.Context, step *Step, execCtx
 	}, nil
 }
 
-func (h *WebscanHandler) getTargets(step *Step, execCtx *ExecutionContext) []string {
-	if step.InputFrom == "" {
-		return nil
-	}
-
-	prevResult, ok := execCtx.StepResults[step.InputFrom]
-	if !ok || prevResult.Output == nil {
-		return nil
-	}
-
-	output, ok := prevResult.Output.(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	fieldData, ok := output[step.InputField]
-	if !ok {
-		return nil
-	}
-
-	switch v := fieldData.(type) {
-	case []string:
-		return v
-	case string:
-		return []string{v}
-	default:
-		return nil
-	}
-}
-
 // VulnscanHandler 漏洞扫描处理器
 type VulnscanHandler struct {
 	tm *toolmgr.ToolManager
@@ -372,7 +343,7 @@ func (h *VulnscanHandler) executeNuclei(ctx context.Context, step *Step, execCtx
 	}
 
 	// 获取目标URL列表
-	targets := h.getTargets(step, execCtx)
+	targets := getTargetsFromStep(step, execCtx)
 	if len(targets) == 0 {
 		targets = []string{execCtx.Target}
 	}
@@ -427,34 +398,4 @@ func (h *VulnscanHandler) executeSQLMap(ctx context.Context, step *Step, execCtx
 	}
 
 	return result, nil
-}
-
-func (h *VulnscanHandler) getTargets(step *Step, execCtx *ExecutionContext) []string {
-	if step.InputFrom == "" {
-		return nil
-	}
-
-	prevResult, ok := execCtx.StepResults[step.InputFrom]
-	if !ok || prevResult.Output == nil {
-		return nil
-	}
-
-	output, ok := prevResult.Output.(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	fieldData, ok := output[step.InputField]
-	if !ok {
-		return nil
-	}
-
-	switch v := fieldData.(type) {
-	case []string:
-		return v
-	case string:
-		return []string{v}
-	default:
-		return nil
-	}
 }

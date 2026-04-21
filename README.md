@@ -1,26 +1,325 @@
 # fcapital
 
-<div align="center">
+> **Beyond a Tool Manager: Automated Workflow Engine with Intelligent Tool Chaining for Penetration Testing.**
+> **超越工具管理器：面向渗透测试的自动化工作流引擎与智能工具链联动。**
 
-```
-  ███████╗ ██████╗ █████╗ ██╗     ███████╗██╗██████╗ ███████╗
-  ██╔════╝██╔════╝██╔══██╗██║     ██╔════╝██║██╔══██╗██╔════╝
-  █████╗  ██║     ███████║██║     █████╗  ██║██║  ██║█████╗
-  ██╔══╝  ██║     ██╔══██║██║     ██╔══╝  ██║██║  ██║██╔══╝
-  ██║     ╚██████╗██║  ██║███████╗███████╗██║██████╔╝███████╗
-  ╚═╝      ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝╚═════╝ ╚══════╝
-```
-
-**A Comprehensive Penetration Testing Framework**
-
-[![Go Version](https://img.shields.io/badge/Go-1.21%2B-00ADD8?style=flat&logo=go)](https://golang.org)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
-</div>
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Go 1.21+](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://golang.org)
+[![ProjectDiscovery](https://img.shields.io/badge/ProjectDiscovery-Integrated-orange.svg)](https://github.com/projectdiscovery)
 
 ---
 
-## ⚠️ Disclaimer
+## 🇬🇧 English Documentation
+
+### 📖 Introduction
+
+**fcapital** is not just another tool wrapper—it's a **workflow automation engine** designed for professional penetration testers. While similar frameworks focus on tool installation, fcapital emphasizes **intelligent tool chaining**, **automated data flow**, and **comprehensive reporting**. Built with Go for performance, it orchestrates reconnaissance, scanning, and vulnerability assessment into cohesive workflows that mirror real-world penetration testing methodologies.
+
+### 🚀 Key Features
+
+| Feature | Detail |
+| :--- | :--- |
+| **🔄 Workflow Engine** | Topological execution with dependency resolution. Steps auto-chain via `InputFrom`/`InputField` mechanism. |
+| **🔗 Smart Data Flow** | Subdomain enumeration → HTTP probe → Directory scan → Vulnerability scan. Zero manual intervention. |
+| **📊 Report Generation** | HTML (dark theme), JSON, Markdown formats. Executive summary + technical details. |
+| **🛠️ Auto-Install** | 11 package managers: `apt`, `yum`, `dnf`, `pacman`, `brew`, `choco`, `scoop`, `winget`, `go`, `pip`, `cargo`. |
+| **🎯 Unified Interface** | Single CLI for 12+ tools. Consistent flags, output formats, and error handling. |
+| **⚡ Go Performance** | Native binaries, concurrent execution, streaming I/O for large outputs. |
+
+### 📊 Built-in Workflows
+
+| Workflow | Steps | Use Case |
+| :--- | :--- | :--- |
+| **full** | Subdomain → HTTP → Port → Dir → Vuln | Complete penetration test |
+| **recon** | Subdomain → HTTP | Quick reconnaissance |
+| **webapp** | HTTP → Dir → Vuln | Web application assessment |
+| **vuln** | HTTP → Nuclei | Vulnerability-focused scan |
+
+### 🛠️ Supported Tools (12)
+
+| Category | Tools |
+| :--- | :--- |
+| **Recon** | httpx, dnsx |
+| **Subdomain** | subfinder |
+| **Port Scan** | nmap |
+| **Web Scan** | dirsearch, gobuster, ffuf, dirb |
+| **Vuln Scan** | nuclei, sqlmap, wpscan |
+| **Password** | hydra |
+
+### 🚀 Getting Started
+
+#### Installation
+
+```bash
+# Clone and build
+git clone https://github.com/Mal-Suen/fcapital.git
+cd fcapital
+go build -o build/fcapital ./cmd/fcapital
+
+# Or using Make
+make build
+```
+
+#### Quick Start
+
+```bash
+# Check tool dependencies
+./build/fcapital deps check
+
+# Install missing tools (auto-detects package manager)
+./build/fcapital deps install nmap
+./build/fcapital deps install --all
+
+# Run a workflow
+./build/fcapital workflow run full -t example.com
+
+# List available workflows
+./build/fcapital workflow list
+```
+
+#### CLI Commands
+
+```bash
+# === Dependency Management ===
+fcapital deps check              # Check all tools
+fcapital deps list               # List supported tools
+fcapital deps install <tool>     # Install specific tool
+fcapital deps install --all      # Install all missing tools
+
+# === Reconnaissance ===
+fcapital recon http -t example.com           # HTTP probe
+fcapital recon http -t sub1.com,sub2.com     # Multiple targets
+fcapital recon dns -d example.com            # DNS query
+
+# === Subdomain Enumeration ===
+fcapital subdomain passive -d example.com    # Passive enumeration
+
+# === Port Scanning ===
+fcapital portscan quick -t 192.168.1.1       # Top 100 ports
+fcapital portscan full -t 192.168.1.1        # All 65535 ports
+fcapital portscan custom -t 192.168.1.1 -p 80,443,8080-9000
+
+# === Web Scanning ===
+fcapital webscan dir -u https://example.com              # Default (gobuster)
+fcapital webscan dir -u https://example.com -T dirsearch # Specific tool
+fcapital webscan dir -u https://example.com -w wordlist.txt -e php,asp
+
+# === Vulnerability Scanning ===
+fcapital vulnscan nuclei -t https://example.com
+fcapital vulnscan nuclei -t https://example.com --tags cve,rce
+fcapital vulnscan sqlmap -t "https://example.com?id=1"
+
+# === Workflow Automation ===
+fcapital workflow run full -t example.com      # Full pentest
+fcapital workflow run recon -t example.com     # Quick recon
+fcapital workflow run webapp -t example.com    # Web app scan
+fcapital workflow run vuln -t example.com      # Vuln scan
+fcapital workflow list                         # List workflows
+```
+
+### 📂 Project Structure
+
+```text
+fcapital/
+├── cmd/fcapital/              # Entry point
+├── internal/
+│   ├── cli/                   # CLI commands
+│   │   ├── root.go            # Root command
+│   │   ├── deps.go            # Dependency management
+│   │   ├── workflow.go        # Workflow commands
+│   │   ├── recon.go           # Recon commands
+│   │   ├── subdomain.go       # Subdomain commands
+│   │   ├── portscan.go        # Port scan commands
+│   │   ├── webscan.go         # Web scan commands
+│   │   └── vulnscan.go        # Vuln scan commands
+│   ├── core/
+│   │   ├── toolmgr/           # Tool manager
+│   │   │   ├── manager.go     # Tool detection & installation
+│   │   │   └── runner.go      # Tool execution
+│   │   └── workflow/          # Workflow engine
+│   │       ├── engine.go      # Core engine with topological sort
+│   │       ├── handlers.go    # Step handlers for each module
+│   │       └── report.go      # Report generation (HTML/JSON/MD)
+│   ├── modules/               # Feature modules
+│   │   ├── recon/             # HTTPX, DNSX runners
+│   │   ├── subdomain/         # Subfinder runner
+│   │   ├── portscan/          # Nmap runner
+│   │   ├── webscan/           # Dirsearch, Gobuster, FFUF runners
+│   │   ├── vulnscan/          # Nuclei, SQLMap runners
+│   │   └── utils/             # Encoding, hashing utilities
+│   └── pkg/errors/            # Unified error handling
+├── configs/
+│   └── tools.yaml             # Tool definitions
+├── build/                     # Compiled binaries
+└── README.md
+```
+
+### 🔬 Architecture Highlights
+
+1. **Workflow Engine**: Uses topological sorting to resolve step dependencies. Each step declares `DependsOn`, `InputFrom`, and `InputField` for automatic data flow.
+
+2. **Tool Runner**: Abstracts tool execution with timeout control, stdin/stdout handling, and progress callbacks. Supports both synchronous and streaming modes.
+
+3. **Auto-Install**: Detects OS and available package managers, then attempts installation in priority order. Falls back to manual instructions when automatic install fails.
+
+---
+
+## 🇨🇳 中文文档
+
+### 📖 项目简介
+
+**fcapital** 不仅仅是一个工具包装器——它是为专业渗透测试人员设计的**工作流自动化引擎**。当类似框架专注于工具安装时，fcapital 强调**智能工具链联动**、**自动化数据流转**和**全面报告生成**。采用 Go 语言构建，将侦察、扫描和漏洞评估编排成符合真实渗透测试方法论的工作流。
+
+### 🚀 核心特性
+
+| 特性 | 细节 |
+| :--- | :--- |
+| **🔄 工作流引擎** | 拓扑排序执行，依赖自动解析。步骤通过 `InputFrom`/`InputField` 机制自动串联。 |
+| **🔗 智能数据流** | 子域名枚举 → HTTP探测 → 目录扫描 → 漏洞扫描。零手动干预。 |
+| **📊 报告生成** | HTML（深色主题）、JSON、Markdown 格式。执行摘要 + 技术细节。 |
+| **🛠️ 自动安装** | 支持 11 种包管理器：`apt`、`yum`、`dnf`、`pacman`、`brew`、`choco`、`scoop`、`winget`、`go`、`pip`、`cargo`。 |
+| **🎯 统一接口** | 单一 CLI 控制 12+ 工具。统一的参数、输出格式和错误处理。 |
+| **⚡ Go 性能** | 原生二进制，并发执行，流式 I/O 处理大输出。 |
+
+### 📊 内置工作流
+
+| 工作流 | 步骤 | 用途 |
+| :--- | :--- | :--- |
+| **full** | 子域名 → HTTP → 端口 → 目录 → 漏洞 | 完整渗透测试 |
+| **recon** | 子域名 → HTTP | 快速侦察 |
+| **webapp** | HTTP → 目录 → 漏洞 | Web应用评估 |
+| **vuln** | HTTP → Nuclei | 漏洞扫描 |
+
+### 🛠️ 支持的工具 (12)
+
+| 类别 | 工具 |
+| :--- | :--- |
+| **侦察** | httpx, dnsx |
+| **子域名** | subfinder |
+| **端口扫描** | nmap |
+| **Web扫描** | dirsearch, gobuster, ffuf, dirb |
+| **漏洞扫描** | nuclei, sqlmap, wpscan |
+| **密码攻击** | hydra |
+
+### 🚀 快速开始
+
+#### 安装
+
+```bash
+# 克隆并构建
+git clone https://github.com/Mal-Suen/fcapital.git
+cd fcapital
+go build -o build/fcapital ./cmd/fcapital
+
+# 或使用 Make
+make build
+```
+
+#### 快速上手
+
+```bash
+# 检查工具依赖
+./build/fcapital deps check
+
+# 安装缺失工具（自动检测包管理器）
+./build/fcapital deps install nmap
+./build/fcapital deps install --all
+
+# 运行工作流
+./build/fcapital workflow run full -t example.com
+
+# 列出可用工作流
+./build/fcapital workflow list
+```
+
+#### 命令行示例
+
+```bash
+# === 依赖管理 ===
+fcapital deps check              # 检查所有工具
+fcapital deps list               # 列出支持的工具有
+fcapital deps install <tool>     # 安装指定工具
+fcapital deps install --all      # 安装所有缺失工具
+
+# === 信息收集 ===
+fcapital recon http -t example.com           # HTTP探测
+fcapital recon http -t sub1.com,sub2.com     # 多目标
+fcapital recon dns -d example.com            # DNS查询
+
+# === 子域名枚举 ===
+fcapital subdomain passive -d example.com    # 被动枚举
+
+# === 端口扫描 ===
+fcapital portscan quick -t 192.168.1.1       # Top 100端口
+fcapital portscan full -t 192.168.1.1        # 全端口
+fcapital portscan custom -t 192.168.1.1 -p 80,443,8080-9000
+
+# === Web扫描 ===
+fcapital webscan dir -u https://example.com              # 默认(gobuster)
+fcapital webscan dir -u https://example.com -T dirsearch # 指定工具
+fcapital webscan dir -u https://example.com -w wordlist.txt -e php,asp
+
+# === 漏洞扫描 ===
+fcapital vulnscan nuclei -t https://example.com
+fcapital vulnscan nuclei -t https://example.com --tags cve,rce
+fcapital vulnscan sqlmap -t "https://example.com?id=1"
+
+# === 工作流自动化 ===
+fcapital workflow run full -t example.com      # 完整渗透
+fcapital workflow run recon -t example.com     # 快速侦察
+fcapital workflow run webapp -t example.com    # Web应用扫描
+fcapital workflow run vuln -t example.com      # 漏洞扫描
+fcapital workflow list                         # 列出工作流
+```
+
+### 📂 目录结构
+
+```text
+fcapital/
+├── cmd/fcapital/              # 入口点
+├── internal/
+│   ├── cli/                   # CLI命令
+│   │   ├── root.go            # 根命令
+│   │   ├── deps.go            # 依赖管理
+│   │   ├── workflow.go        # 工作流命令
+│   │   ├── recon.go           # 侦察命令
+│   │   ├── subdomain.go       # 子域名命令
+│   │   ├── portscan.go        # 端口扫描命令
+│   │   ├── webscan.go         # Web扫描命令
+│   │   └── vulnscan.go        # 漏洞扫描命令
+│   ├── core/
+│   │   ├── toolmgr/           # 工具管理器
+│   │   │   ├── manager.go     # 工具检测与安装
+│   │   │   └── runner.go      # 工具执行
+│   │   └── workflow/          # 工作流引擎
+│   │       ├── engine.go      # 核心引擎（拓扑排序）
+│   │       ├── handlers.go    # 各模块步骤处理器
+│   │       └── report.go      # 报告生成（HTML/JSON/MD）
+│   ├── modules/               # 功能模块
+│   │   ├── recon/             # HTTPX, DNSX 运行器
+│   │   ├── subdomain/         # Subfinder 运行器
+│   │   ├── portscan/          # Nmap 运行器
+│   │   ├── webscan/           # Dirsearch, Gobuster, FFUF 运行器
+│   │   ├── vulnscan/          # Nuclei, SQLMap 运行器
+│   │   └── utils/             # 编码、哈希工具
+│   └── pkg/errors/            # 统一错误处理
+├── configs/
+│   └── tools.yaml             # 工具定义
+├── build/                     # 编译产物
+└── README.md
+```
+
+### 🔬 架构亮点
+
+1. **工作流引擎**：使用拓扑排序解析步骤依赖。每个步骤声明 `DependsOn`、`InputFrom` 和 `InputField` 实现自动数据流转。
+
+2. **工具运行器**：抽象工具执行，支持超时控制、stdin/stdout 处理和进度回调。支持同步和流式两种模式。
+
+3. **自动安装**：检测操作系统和可用包管理器，按优先级尝试安装。自动安装失败时提供手动安装指南。
+
+---
+
+## ⚠️ Disclaimer / 免责声明
 
 **fcapital is designed for authorized security testing and educational purposes only.**
 
@@ -30,236 +329,20 @@ Unauthorized use of this tool against systems you do not own or have explicit pe
 2. Comply with all applicable laws and regulations
 3. Accept full responsibility for your actions
 
----
+**fcapital 仅用于授权安全测试和教育目的。**
 
-## 📖 Overview
+未经授权对您不拥有或未获得明确测试许可的系统使用本工具是**违法的**。使用 fcapital 即表示您同意：
 
-fcapital is a penetration testing framework that integrates multiple security tools with a unified interface. It provides both **interactive menu** and **command-line interface** for various security testing tasks.
-
-### Key Features
-
-- 🎯 **Unified Interface** - Single entry point for multiple tools
-- 🔧 **Tool Management** - Automatic detection and installation of dependencies
-- 🖥️ **Dual Mode** - Interactive menu and CLI support
-- ⚡ **Go Performance** - Fast and efficient execution
-- 📦 **Easy Integration** - Seamlessly integrates with popular security tools
+1. 仅测试您拥有或获得书面授权测试的系统
+2. 遵守所有适用法律法规
+3. 对您的行为承担全部责任
 
 ---
 
-## 🛠️ Supported Tools
+## 🤝 Contribution & Contact / 贡献与联系
 
-| Tool | Category | Description | Kali |
-|------|----------|-------------|------|
-| nmap | Port Scan | Network Security Scanner | ✅ |
-| dirsearch | Web Scan | Web Path Scanner | ✅ |
-| dirb | Web Scan | Web Content Scanner | ✅ |
-| gobuster | Web Scan | Directory/File/DNS Busting Tool | ✅ |
-| ffuf | Web Scan | Fast Web Fuzzer | ✅ |
-| sqlmap | Vuln Scan | Automatic SQL Injection Tool | ✅ |
-| wpscan | Web Scan | WordPress Security Scanner | ✅ |
-| hydra | Password | Network Logon Cracker | ✅ |
-| nuclei | Vuln Scan | Vulnerability Scanner | ❌ |
-| subfinder | Subdomain | Subdomain Discovery Tool | ❌ |
-| httpx | Recon | HTTP Toolkit | ❌ |
-| dnsx | Recon | DNS Toolkit | ❌ |
+*   **Author:** Mal-Suen
+*   **Blog:** [Mal-Suen's Blog](https://blog.mal-suen.cn)
+*   **GitHub:** [https://github.com/Mal-Suen/fcapital](https://github.com/Mal-Suen/fcapital)
 
----
-
-## 🚀 Installation
-
-### Prerequisites
-
-- Go 1.21 or higher
-- Git
-
-### Build from Source
-
-```bash
-# Clone the repository
-git clone https://github.com/Mal-Suen/fcapital.git
-cd fcapital
-
-# Install dependencies
-make install
-
-# Build
-make build
-
-# Run
-./build/fcapital
-```
-
-### Using Go Install
-
-```bash
-go install github.com/Mal-Suen/fcapital/cmd/fcapital@latest
-```
-
----
-
-## 📚 Usage
-
-### Interactive Mode
-
-```bash
-fcapital
-```
-
-### CLI Mode
-
-```bash
-# Check dependencies
-fcapital deps check
-
-# List supported tools
-fcapital deps list
-
-# HTTP probe
-fcapital recon http -t example.com
-
-# Subdomain enumeration
-fcapital subdomain passive -d example.com
-
-# Port scan
-fcapital portscan quick -t 192.168.1.1
-fcapital portscan full -t 192.168.1.1
-fcapital portscan custom -t 192.168.1.1 -p 80,443,8080
-
-# Directory scan
-fcapital webscan dir -t https://example.com
-
-# Vulnerability scan
-fcapital vulnscan nuclei -t https://example.com
-fcapital vulnscan sqlmap -t https://example.com?id=1
-```
-
----
-
-## 📁 Project Structure
-
-```
-fcapital/
-├── cmd/
-│   └── fcapital/          # Main entry point
-│       └── main.go
-├── internal/
-│   ├── cli/               # CLI commands
-│   │   ├── root.go
-│   │   ├── banner.go
-│   │   ├── interactive.go
-│   │   ├── deps.go
-│   │   ├── recon.go
-│   │   ├── subdomain.go
-│   │   ├── portscan.go
-│   │   ├── webscan.go
-│   │   └── vulnscan.go
-│   ├── core/
-│   │   └── toolmgr/       # Tool manager
-│   │       ├── manager.go
-│   │       └── runner.go
-│   └── modules/           # Feature modules
-│       ├── recon/
-│       ├── subdomain/
-│       ├── portscan/
-│       ├── webscan/
-│       ├── vulnscan/
-│       ├── password/
-│       └── utils/
-├── configs/
-│   ├── config.yaml        # Main config
-│   ├── tools.yaml         # Tools config
-│   └── wordlists/         # Wordlists
-├── docs/                  # Documentation
-├── scripts/               # Helper scripts
-├── Makefile
-├── go.mod
-└── README.md
-```
-
----
-
-## ⚙️ Configuration
-
-Configuration file is located at `~/.fcapital/config.yaml` or `./configs/config.yaml`.
-
-```yaml
-# Output settings
-output:
-  format: text  # text, json, csv, html
-  color: true
-  verbose: false
-
-# Tool settings
-tools:
-  local_path: "~/.fcapital/tools"
-  timeout: 10m
-
-# Module defaults
-modules:
-  webscan:
-    default_tool: "dirsearch"
-    wordlist: "configs/wordlists/dirs.txt"
-```
-
----
-
-## 🔑 API Keys Configuration
-
-Some tools require API keys for full functionality:
-
-### subfinder
-Edit `~/.config/subfinder/provider-config.yaml` to add API keys for various sources:
-- Shodan, Censys, VirusTotal, SecurityTrails, etc.
-
-### nuclei
-Nuclei templates are downloaded automatically. Custom templates can be added to `~/.config/nuclei/templates/`.
-
-### httpx
-No API keys required for basic usage.
-
----
-
-## 🔧 Development
-
-```bash
-# Run tests
-make test
-
-# Lint code
-make lint
-
-# Format code
-make fmt
-
-# Development mode with hot reload
-make dev
-
-# Cross-compile
-make cross
-```
-
----
-
-## 📝 License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-## 🙏 Acknowledgments
-
-Inspired by:
-- [fsociety](https://github.com/Manisso/fsociety) - A Penetration Testing Framework
-- [ProjectDiscovery](https://github.com/projectdiscovery) - httpx, subfinder, nuclei, dnsx, ffuf
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+*Copyright © 2024-2026 Mal-Suen. Released under MIT License.*
