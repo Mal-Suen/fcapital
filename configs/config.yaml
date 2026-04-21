@@ -1,0 +1,43 @@
+# fcapital 配置文件
+
+# 应用配置
+app:
+  name: fcapital
+  version: 1.0.0
+  debug: false
+
+# 输出配置
+output:
+  format: text  # text, json, csv, html
+  file: ""
+  color: true
+  verbose: false
+
+# 工具配置
+tools:
+  config: "configs/tools.yaml"
+  local_path: "~/.fcapital/tools"
+  timeout: 10m
+
+# 模块默认配置
+modules:
+  recon:
+    timeout: 5m
+  subdomain:
+    timeout: 10m
+  portscan:
+    timeout: 30m
+    default_ports: "-F"  # Fast scan
+  webscan:
+    timeout: 20m
+    default_tool: "dirsearch"
+    wordlist: "configs/wordlists/dirs.txt"
+  vulnscan:
+    timeout: 60m
+    templates: ""
+
+# 代理配置
+proxy:
+  http: ""
+  https: ""
+  socks5: ""

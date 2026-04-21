@@ -1,0 +1,119 @@
+# fcapital 工具配置文件
+# 定义支持的外部工具及其安装方法
+
+tools:
+  # ==================== 端口扫描 ====================
+  nmap:
+    name: "Nmap"
+    binary: "nmap"
+    category: "portscan"
+    description: "Network Security Scanner"
+    install:
+      linux: "sudo apt install nmap -y"
+      macos: "brew install nmap"
+      windows: "choco install nmap -y"
+  
+  # ==================== Web 扫描 ====================
+  dirsearch:
+    name: "Dirsearch"
+    binary: "dirsearch"
+    category: "webscan"
+    description: "Web Path Scanner"
+    install:
+      linux: "sudo apt install dirsearch -y"
+      pip: "pip install dirsearch"
+  
+  dirb:
+    name: "Dirb"
+    binary: "dirb"
+    category: "webscan"
+    description: "Web Content Scanner"
+    install:
+      linux: "sudo apt install dirb -y"
+      macos: "brew install dirb"
+  
+  gobuster:
+    name: "Gobuster"
+    binary: "gobuster"
+    category: "webscan"
+    description: "Directory/File/DNS Busting Tool"
+    install:
+      linux: "sudo apt install gobuster -y"
+      macos: "brew install gobuster"
+      go: "go install github.com/OJ/gobuster/v3@latest"
+  
+  ffuf:
+    name: "Ffuf"
+    binary: "ffuf"
+    category: "webscan"
+    description: "Fast Web Fuzzer"
+    install:
+      linux: "sudo apt install ffuf -y"
+      go: "go install github.com/ffuf/ffuf/v2@latest"
+  
+  wpscan:
+    name: "WPScan"
+    binary: "wpscan"
+    category: "webscan"
+    description: "WordPress Security Scanner"
+    install:
+      linux: "sudo apt install wpscan -y"
+      gem: "gem install wpscan"
+  
+  # ==================== 漏洞扫描 ====================
+  nuclei:
+    name: "Nuclei"
+    binary: "nuclei"
+    category: "vulnscan"
+    description: "Vulnerability Scanner"
+    install:
+      linux: "sudo apt install nuclei -y"
+      go: "go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest"
+  
+  sqlmap:
+    name: "SQLMap"
+    binary: "sqlmap"
+    category: "vulnscan"
+    description: "Automatic SQL Injection Tool"
+    install:
+      linux: "sudo apt install sqlmap -y"
+      pip: "pip install sqlmap"
+  
+  # ==================== 子域名枚举 ====================
+  subfinder:
+    name: "Subfinder"
+    binary: "subfinder"
+    category: "subdomain"
+    description: "Subdomain Discovery Tool"
+    install:
+      linux: "sudo apt install subfinder -y"
+      go: "go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"
+  
+  # ==================== 信息收集 ====================
+  httpx:
+    name: "Httpx"
+    binary: "httpx"
+    category: "recon"
+    description: "HTTP Toolkit"
+    install:
+      linux: "sudo apt install httpx -y"
+      go: "go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest"
+  
+  dnsx:
+    name: "Dnsx"
+    binary: "dnsx"
+    category: "recon"
+    description: "DNS Toolkit"
+    install:
+      linux: "sudo apt install dnsx -y"
+      go: "go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest"
+  
+  # ==================== 密码攻击 ====================
+  hydra:
+    name: "Hydra"
+    binary: "hydra"
+    category: "password"
+    description: "Network Logon Cracker"
+    install:
+      linux: "sudo apt install hydra -y"
+      macos: "brew install hydra"
