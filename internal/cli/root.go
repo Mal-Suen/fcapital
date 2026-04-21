@@ -47,6 +47,7 @@ func init() {
 	rootCmd.AddCommand(portscanCmd)
 	rootCmd.AddCommand(webscanCmd)
 	rootCmd.AddCommand(vulnscanCmd)
+	rootCmd.AddCommand(workflowCmd)
 }
 
 func initConfig() {
