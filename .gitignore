@@ -33,3 +33,13 @@ Thumbs.db
 .fcaptial/
 *.log
 output/
+
+# Environment files (contain sensitive API keys)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# Keep example file
+!.env.example

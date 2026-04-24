@@ -136,9 +136,6 @@ func (r *Runner) RunWithProgress(ctx context.Context, args []string, progressFn 
 		return nil, err
 	}
 
-	// 确保在函数结束时关闭管道
-	defer stdout.Close()
-
 	// 实时读取输出
 	var outputBuilder strings.Builder
 	buf := make([]byte, 1024)
@@ -155,6 +152,9 @@ func (r *Runner) RunWithProgress(ctx context.Context, args []string, progressFn 
 			break
 		}
 	}
+
+	// 关闭管道后再 Wait
+	stdout.Close()
 
 	err = cmd.Wait()
 	result.Duration = time.Since(result.StartTime)

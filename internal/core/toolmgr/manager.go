@@ -149,11 +149,16 @@ func NewToolManager() *ToolManager {
 		}
 	}
 
-	return &ToolManager{
+	tm := &ToolManager{
 		tools:      make(map[string]*Tool),
 		localPath:  localPath,
 		extraPaths: extraPaths,
 	}
+	// Load default tools
+	tm.loadDefaultTools()
+	// Auto-detect all tools
+	tm.DetectAll()
+	return tm
 }
 
 // findPythonScriptsPath 查找 Python Scripts 路径

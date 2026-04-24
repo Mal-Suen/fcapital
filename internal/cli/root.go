@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -51,22 +52,48 @@ func init() {
 }
 
 func initConfig() {
+	// 1. 加载 .env 文件（按优先级顺序）
+	// 优先级：当前目录 > 用户主目录 > 项目配置目录
+	envFiles := []string{
+		".env",                // 当前目录
+		".env.local",          // 当前目录本地覆盖（git忽略）
+		".env.production",     // 生产环境
+		".env.development",    // 开发环境
+	}
+
+	home, _ := os.UserHomeDir()
+	if home != "" {
+		envFiles = append(envFiles,
+			home+"/.fcapital/.env",        // 用户配置目录
+			home+"/.fcapital/.env.local",  // 用户配置本地覆盖
+		)
+	}
+
+	// 尝试加载每个 .env 文件
+	for _, envFile := range envFiles {
+		if _, err := os.Stat(envFile); err == nil {
+			if err := godotenv.Load(envFile); err == nil {
+				if verbose {
+					fmt.Fprintln(os.Stderr, "Loaded env file:", envFile)
+				}
+			}
+		}
+	}
+
+	// 2. 加载配置文件
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+		if home != "" {
+			viper.AddConfigPath(home + "/.fcapital")
 		}
-
-		viper.AddConfigPath(home + "/.fcapital")
 		viper.AddConfigPath(".")
 		viper.AddConfigPath("./configs")
 		viper.SetConfigType("yaml")
 		viper.SetConfigName("config")
 	}
 
+	// 3. 自动读取环境变量
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err == nil {

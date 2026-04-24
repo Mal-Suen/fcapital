@@ -1,11 +1,12 @@
 # fcapital
 
-> **Beyond a Tool Manager: Automated Workflow Engine with Intelligent Tool Chaining for Penetration Testing.**
-> **超越工具管理器：面向渗透测试的自动化工作流引擎与智能工具链联动。**
+> **AI-Driven Penetration Testing Framework with Intelligent Workflow Orchestration.**
+> **AI驱动的渗透测试框架：智能工作流编排与自动化决策。**
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Go 1.21+](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://golang.org)
 [![ProjectDiscovery](https://img.shields.io/badge/ProjectDiscovery-Integrated-orange.svg)](https://github.com/projectdiscovery)
+[![AI-Powered](https://img.shields.io/badge/AI-Powered-green.svg)]()
 
 ---
 
@@ -13,36 +14,61 @@
 
 ### 📖 Introduction
 
-**fcapital** is not just another tool wrapper—it's a **workflow automation engine** designed for professional penetration testers. While similar frameworks focus on tool installation, fcapital emphasizes **intelligent tool chaining**, **automated data flow**, and **comprehensive reporting**. Built with Go for performance, it orchestrates reconnaissance, scanning, and vulnerability assessment into cohesive workflows that mirror real-world penetration testing methodologies.
+**fcapital** is an **AI-driven penetration testing framework** that revolutionizes how security assessments are conducted. Unlike traditional tool wrappers, fcapital integrates **AI decision-making** at every phase, enabling:
+
+- **🤖 AI-Guided Analysis**: Each phase result is analyzed by AI to determine the optimal next step
+- **🔄 Phase-Based Workflow**: Structured execution with dependency resolution and AI decision points
+- **🛠️ Intelligent Tool Scheduling**: Automatic tool detection, installation, and fallback mechanisms
+- **📊 Context-Aware Testing**: System information and tool status are synchronized with AI for informed decisions
 
 ### 🚀 Key Features
 
 | Feature | Detail |
 | :--- | :--- |
-| **🔄 Workflow Engine** | Topological execution with dependency resolution. Steps auto-chain via `InputFrom`/`InputField` mechanism. |
-| **🔗 Smart Data Flow** | Subdomain enumeration → HTTP probe → Directory scan → Vulnerability scan. Zero manual intervention. |
-| **📊 Report Generation** | HTML (dark theme), JSON, Markdown formats. Executive summary + technical details. |
-| **🛠️ Auto-Install** | 11 package managers: `apt`, `yum`, `dnf`, `pacman`, `brew`, `choco`, `scoop`, `winget`, `go`, `pip`, `cargo`. |
-| **🎯 Unified Interface** | Single CLI for 12+ tools. Consistent flags, output formats, and error handling. |
-| **⚡ Go Performance** | Native binaries, concurrent execution, streaming I/O for large outputs. |
+| **🤖 AI Integration** | OpenAI, DeepSeek, Ollama support. AI analyzes phase results and suggests next actions. |
+| **🔄 Phase-Based Workflow** | Recon → Discovery → Verification → Report. AI decides phase transitions. |
+| **🔗 Smart Data Flow** | Results flow between phases. AI determines what to focus on next. |
+| **🛠️ Auto-Install** | 11 package managers. Missing tools are auto-detected and installed. |
+| **📊 Context Management** | System info, tool status, and history are maintained for AI context. |
+| **⚡ Go Performance** | Native binaries, concurrent execution, streaming I/O. |
 
-### 📊 Built-in Workflows
+### 🆕 AI-Powered Commands
 
-| Workflow | Steps | Use Case |
+```bash
+# AI-driven scan (recommended)
+fcapital ai-scan -t example.com
+
+# With specific AI provider
+fcapital ai-scan -t example.com --provider deepseek
+fcapital ai-scan -t example.com --provider openai
+fcapital ai-scan -t example.com --provider ollama
+
+# Auto-continue without prompts
+fcapital ai-scan -t example.com --auto-continue
+
+# Interactive AI chat
+fcapital ai-chat
+
+# View context information
+fcapital context show
+```
+
+### 📊 AI Workflow Phases
+
+| Phase | Description | AI Decision Point |
 | :--- | :--- | :--- |
-| **full** | Subdomain → HTTP → Port → Dir → Vuln | Complete penetration test |
-| **recon** | Subdomain → HTTP | Quick reconnaissance |
-| **webapp** | HTTP → Dir → Vuln | Web application assessment |
-| **vuln** | HTTP → Nuclei | Vulnerability-focused scan |
+| **Recon** | Subdomain enum, HTTP probe, port scan | Which hosts to focus on |
+| **Discovery** | Vulnerability scanning with nuclei | Priority ranking of findings |
+| **Verification** | SQL injection, CMS exploits | Which vulns to exploit |
+| **Report** | Generate comprehensive report | Report content optimization |
 
-### 🛠️ Supported Tools (12)
+### 🛠️ Supported Tools (12+)
 
 | Category | Tools |
 | :--- | :--- |
-| **Recon** | httpx, dnsx |
-| **Subdomain** | subfinder |
+| **Recon** | subfinder, httpx, dnsx |
 | **Port Scan** | nmap |
-| **Web Scan** | dirsearch, gobuster, ffuf, dirb |
+| **Web Scan** | dirsearch, gobuster, ffuf |
 | **Vuln Scan** | nuclei, sqlmap, wpscan |
 | **Password** | hydra |
 
@@ -63,41 +89,40 @@ make build
 #### Quick Start
 
 ```bash
+# Set AI API key (choose one)
+export DEEPSEEK_API_KEY="your-key"    # Recommended (cost-effective)
+export OPENAI_API_KEY="your-key"      # GPT-4o
+# Or use local Ollama (no API key needed)
+
+# Run AI-driven scan
+./build/fcapital ai-scan -t example.com
+
 # Check tool dependencies
 ./build/fcapital deps check
 
-# Install missing tools (auto-detects package manager)
-./build/fcapital deps install nmap
+# Install missing tools
 ./build/fcapital deps install --all
-
-# Run a workflow
-./build/fcapital workflow run full -t example.com
-
-# List available workflows
-./build/fcapital workflow list
 ```
 
 #### CLI Commands
 
 ```bash
+# === AI-Powered Commands (NEW) ===
+fcapital ai-scan -t example.com              # AI-driven penetration test
+fcapital ai-scan -t example.com --auto-continue
+fcapital ai-chat                             # Interactive AI assistant
+fcapital context show                        # View current context
+
 # === Dependency Management ===
 fcapital deps check              # Check all tools
 fcapital deps list               # List supported tools
 fcapital deps install <tool>     # Install specific tool
 fcapital deps install --all      # Install all missing tools
 
-# === Reconnaissance ===
-fcapital recon http -t example.com           # HTTP probe
-fcapital recon http -t sub1.com,sub2.com     # Multiple targets
-fcapital recon dns -d example.com            # DNS query
-
-# === Subdomain Enumeration ===
-fcapital subdomain passive -d example.com    # Passive enumeration
-
-# === Port Scanning ===
-fcapital portscan quick -t 192.168.1.1       # Top 100 ports
-fcapital portscan full -t 192.168.1.1        # All 65535 ports
-fcapital portscan custom -t 192.168.1.1 -p 80,443,8080-9000
+# === Traditional Workflows ===
+fcapital workflow run full -t example.com
+fcapital workflow run recon -t example.com
+fcapital workflow run webapp -t example.com
 
 # === Web Scanning ===
 fcapital webscan dir -u https://example.com              # Default (gobuster)
