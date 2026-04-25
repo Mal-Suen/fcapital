@@ -296,6 +296,26 @@ func runSession(initialTask string, log *logger.Logger, nextAction string) {
 
 	if provider == nil {
 		fmt.Println("❌ 交互式模式需要AI支持，请配置API密钥")
+		fmt.Println()
+		fmt.Println("📝 配置方法:")
+		fmt.Println("   1. 在项目根目录创建 .env 文件:")
+		fmt.Println("      OPENAI_API_KEY=your-api-key")
+		fmt.Println("      OPENAI_BASE_URL=https://api.openai.com/v2  # 可选")
+		fmt.Println("      AI_MODEL=gpt-4  # 可选")
+		fmt.Println()
+		fmt.Println("   2. 或设置环境变量:")
+		fmt.Println("      export OPENAI_API_KEY=your-api-key  # Linux/macOS")
+		fmt.Println("      set OPENAI_API_KEY=your-api-key     # Windows CMD")
+		fmt.Println("      $env:OPENAI_API_KEY=\"your-key\"      # Windows PowerShell")
+		fmt.Println()
+		fmt.Println("   3. 或使用其他提供者:")
+		fmt.Println("      --provider deepseek  # DeepSeek API")
+		fmt.Println("      --provider ollama    # 本地 Ollama (无需API密钥)")
+		fmt.Println()
+		fmt.Println("💡 .env 文件搜索路径:")
+		fmt.Println("   - 当前工作目录")
+		fmt.Println("   - 可执行文件所在目录及其上级目录")
+		fmt.Println("   - ~/.fcapital/.env")
 		return
 	}
 

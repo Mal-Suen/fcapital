@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
@@ -51,33 +52,70 @@ func init() {
 	rootCmd.AddCommand(workflowCmd)
 }
 
+// getExeDir 获取可执行文件所在目录
+func getExeDir() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	return filepath.Dir(exe)
+}
+
 func initConfig() {
 	// 1. 加载 .env 文件（按优先级顺序）
-	// 优先级：当前目录 > 用户主目录 > 项目配置目录
-	envFiles := []string{
-		".env",                // 当前目录
-		".env.local",          // 当前目录本地覆盖（git忽略）
-		".env.production",     // 生产环境
-		".env.development",    // 开发环境
-	}
+	// 优先级：当前目录 > 可执行文件目录 > 用户主目录
+	envFiles := []string{}
 
-	home, _ := os.UserHomeDir()
-	if home != "" {
+	// 当前工作目录
+	cwd, _ := os.Getwd()
+	if cwd != "" {
 		envFiles = append(envFiles,
-			home+"/.fcapital/.env",        // 用户配置目录
-			home+"/.fcapital/.env.local",  // 用户配置本地覆盖
+			filepath.Join(cwd, ".env"),
+			filepath.Join(cwd, ".env.local"),
 		)
 	}
 
-	// 尝试加载每个 .env 文件
+	// 可执行文件所在目录
+	exeDir := getExeDir()
+	if exeDir != "" {
+		// 可执行文件目录本身
+		envFiles = append(envFiles,
+			filepath.Join(exeDir, ".env"),
+			filepath.Join(exeDir, ".env.local"),
+		)
+		// 可执行文件目录的上级目录（build -> 项目根目录）
+		parentDir := filepath.Dir(exeDir)
+		if parentDir != "" && parentDir != exeDir {
+			envFiles = append(envFiles,
+				filepath.Join(parentDir, ".env"),
+				filepath.Join(parentDir, ".env.local"),
+			)
+		}
+	}
+
+	// 用户主目录
+	home, _ := os.UserHomeDir()
+	if home != "" {
+		envFiles = append(envFiles,
+			filepath.Join(home, ".fcapital", ".env"),
+			filepath.Join(home, ".fcapital", ".env.local"),
+		)
+	}
+
+	// 尝试加载每个 .env 文件（第一个成功的即可）
+	loaded := false
 	for _, envFile := range envFiles {
 		if _, err := os.Stat(envFile); err == nil {
 			if err := godotenv.Load(envFile); err == nil {
-				if verbose {
-					fmt.Fprintln(os.Stderr, "Loaded env file:", envFile)
-				}
+				loaded = true
+				break // 只加载第一个找到的
 			}
 		}
+	}
+
+	// 如果没有找到 .env 文件，给出提示
+	if !loaded && verbose {
+		fmt.Fprintln(os.Stderr, "⚠️  未找到 .env 文件，请确保已配置 API 密钥")
 	}
 
 	// 2. 加载配置文件
