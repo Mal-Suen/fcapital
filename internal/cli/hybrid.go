@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
 	"strings"
 	"syscall"
 
@@ -135,7 +136,13 @@ func runHybridTask(cmd *cobra.Command, args []string) {
 
 	// Setup signal handler for graceful interrupt
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	if runtime.GOOS == "windows" {
+		// Windows only supports os.Interrupt
+		signal.Notify(sigChan, os.Interrupt)
+	} else {
+		// Unix-like systems support both
+		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	}
 	go func() {
 		<-sigChan
 		fmt.Println("\n\n⚠️  收到中断信号，正在保存会话...")
@@ -192,7 +199,11 @@ func runHybridResume(cmd *cobra.Command, args []string) {
 
 	// Setup signal handler
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	if runtime.GOOS == "windows" {
+		signal.Notify(sigChan, os.Interrupt)
+	} else {
+		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	}
 	go func() {
 		<-sigChan
 		fmt.Println("\n\n⚠️  收到中断信号，正在保存会话...")
