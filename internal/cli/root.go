@@ -17,15 +17,23 @@ var (
 
 var rootCmd = &cobra.Command{
 	Use:   "fcapital",
-	Short: "A comprehensive penetration testing framework",
-	Long: `fcapital is a penetration testing framework that integrates
-multiple security tools with a unified interface.
+	Short: "AI驱动的渗透测试框架",
+	Long: `fcapital 是一个 AI 驱动的渗透测试框架，集成多种安全工具。
 
-It provides both interactive menu and command-line interface
-for various security testing tasks.`,
+主要命令:
+  fcapital recon -t target     # 信息收集（端口、DNS、HTTP、子域名）
+  fcapital ai -t target        # AI 驱动渗透测试
+  fcapital script <task>       # AI 生成脚本
+  fcapital vuln -t target      # 漏洞扫描
+  fcapital deps                # 工具依赖管理
+
+示例:
+  fcapital recon -t example.com
+  fcapital ai -t example.com --provider deepseek
+  fcapital script "waf bypass" --language python`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// 默认运行交互模式
-		runInteractive()
+		// 默认显示帮助
+		cmd.Help()
 	},
 }
 
@@ -44,8 +52,9 @@ func init() {
 
 	// 添加子命令
 	rootCmd.AddCommand(depsCmd)
-	rootCmd.AddCommand(reconCmd)
-	rootCmd.AddCommand(subdomainCmd)
+	rootCmd.AddCommand(reconCmd)     // 信息收集 + AI渗透
+	rootCmd.AddCommand(aiCmd)        // AI驱动扫描
+	rootCmd.AddCommand(scriptCmd)    // AI生成脚本
 	rootCmd.AddCommand(portscanCmd)
 	rootCmd.AddCommand(webscanCmd)
 	rootCmd.AddCommand(vulnscanCmd)
