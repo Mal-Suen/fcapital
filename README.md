@@ -7,6 +7,7 @@
 [![Go 1.21+](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://golang.org)
 [![ProjectDiscovery](https://img.shields.io/badge/ProjectDiscovery-Integrated-orange.svg)](https://github.com/projectdiscovery)
 [![AI-Powered](https://img.shields.io/badge/AI-Powered-green.svg)]()
+[![Cross-Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-blue.svg)]()
 
 ---
 
@@ -20,17 +21,19 @@
 - **🔄 Phase-Based Workflow**: Structured execution with dependency resolution and AI decision points
 - **🛠️ Intelligent Tool Scheduling**: Automatic tool detection, installation, and fallback mechanisms
 - **📊 Context-Aware Testing**: System information and tool status are synchronized with AI for informed decisions
+- **🌐 Cross-Platform Support**: Native support for Windows, Linux, and macOS with platform-specific optimizations
 
 ### 🚀 Key Features
 
 | Feature | Detail |
 | :--- | :--- |
 | **🤖 AI Integration** | OpenAI, DeepSeek, Ollama support. AI analyzes phase results and suggests next actions. |
-| **🔄 Phase-Based Workflow** | Recon → Discovery → Verification → Report. AI decides phase transitions. |
+| **🔄 Hybrid Mode** | Standard tasks use mature tools, non-standard tasks use AI-generated scripts. |
 | **🔗 Smart Data Flow** | Results flow between phases. AI determines what to focus on next. |
-| **🛠️ Auto-Install** | 11 package managers. Missing tools are auto-detected and installed. |
+| **🛠️ Auto-Install** | 11+ package managers. Missing tools are auto-detected and installed. |
 | **📊 Context Management** | System info, tool status, and history are maintained for AI context. |
 | **⚡ Go Performance** | Native binaries, concurrent execution, streaming I/O. |
+| **🌐 Cross-Platform** | Windows, Linux, macOS with native package manager support. |
 
 ### 🆕 AI-Powered Commands
 
@@ -53,6 +56,28 @@ fcapital ai-chat
 fcapital context show
 ```
 
+### 🔄 Hybrid Mode Commands
+
+The hybrid mode intelligently chooses between standard tools and AI-generated scripts:
+
+```bash
+# Run task in hybrid mode
+fcapital hybrid run "port scan" -t example.com
+fcapital hybrid run "custom poc for CVE-2024-xxxx" -t example.com
+fcapital hybrid run "waf bypass" -t example.com --auto-confirm
+
+# Analyze task type without execution
+fcapital hybrid analyze "port scan"
+fcapital hybrid analyze "custom poc for CVE-2024-xxxx"
+
+# Generate script without execution
+fcapital hybrid generate "waf bypass script" --language python
+
+# Session management
+fcapital hybrid list                           # List all sessions
+fcapital hybrid resume session_20240101_120000 # Resume interrupted session
+```
+
 ### 📊 AI Workflow Phases
 
 | Phase | Description | AI Decision Point |
@@ -62,15 +87,25 @@ fcapital context show
 | **Verification** | SQL injection, CMS exploits | Which vulns to exploit |
 | **Report** | Generate comprehensive report | Report content optimization |
 
-### 🛠️ Supported Tools (12+)
+### 🛠️ Supported Tools (20+)
 
 | Category | Tools |
 | :--- | :--- |
-| **Recon** | subfinder, httpx, dnsx |
-| **Port Scan** | nmap |
-| **Web Scan** | dirsearch, gobuster, ffuf |
-| **Vuln Scan** | nuclei, sqlmap, wpscan |
-| **Password** | hydra |
+| **Recon** | subfinder, httpx, dnsx, amass |
+| **Port Scan** | nmap, masscan, zmap |
+| **Web Scan** | dirsearch, gobuster, ffuf, feroxbuster, nikto, whatweb |
+| **Vuln Scan** | nuclei, sqlmap, wpscan, joomscan |
+| **Password** | hydra, medusa, ncrack |
+| **SSL/TLS** | sslscan, testssl.sh, openssl |
+| **Utility** | curl, wget, python, python3, ruby, go, git, docker |
+
+### 🌐 Cross-Platform Support
+
+| Platform | Package Managers | Tool Paths |
+| :--- | :--- | :--- |
+| **Windows** | winget, choco, scoop | `C:\Program Files`, `%USERPROFILE%\go\bin` |
+| **Linux** | apt, yum, dnf, pacman, snap | `/usr/bin`, `/usr/local/bin`, `~/.local/bin` |
+| **macOS** | brew, port | `/usr/local/bin`, `/opt/homebrew/bin` |
 
 ### 🚀 Getting Started
 
@@ -84,6 +119,9 @@ go build -o build/fcapital ./cmd/fcapital
 
 # Or using Make
 make build
+
+# Windows (PowerShell)
+go build -o build/fcapital.exe ./cmd/fcapital
 ```
 
 #### Quick Start
@@ -97,6 +135,9 @@ export OPENAI_API_KEY="your-key"      # GPT-4o
 # Run AI-driven scan
 ./build/fcapital ai-scan -t example.com
 
+# Or use hybrid mode
+./build/fcapital hybrid run "full assessment" -t example.com
+
 # Check tool dependencies
 ./build/fcapital deps check
 
@@ -107,11 +148,19 @@ export OPENAI_API_KEY="your-key"      # GPT-4o
 #### CLI Commands
 
 ```bash
-# === AI-Powered Commands (NEW) ===
+# === AI-Powered Commands ===
 fcapital ai-scan -t example.com              # AI-driven penetration test
 fcapital ai-scan -t example.com --auto-continue
 fcapital ai-chat                             # Interactive AI assistant
 fcapital context show                        # View current context
+
+# === Hybrid Mode Commands ===
+fcapital hybrid run "port scan" -t example.com
+fcapital hybrid run "custom poc" -t example.com --auto-confirm
+fcapital hybrid analyze "task description"
+fcapital hybrid generate "script task" --language python
+fcapital hybrid list
+fcapital hybrid resume <session-id>
 
 # === Dependency Management ===
 fcapital deps check              # Check all tools
@@ -150,6 +199,9 @@ fcapital/
 ├── internal/
 │   ├── cli/                   # CLI commands
 │   │   ├── root.go            # Root command
+│   │   ├── ai.go              # AI-powered commands
+│   │   ├── hybrid.go          # Hybrid mode commands
+│   │   ├── interactive.go     # Interactive mode
 │   │   ├── deps.go            # Dependency management
 │   │   ├── workflow.go        # Workflow commands
 │   │   ├── recon.go           # Recon commands
@@ -158,9 +210,25 @@ fcapital/
 │   │   ├── webscan.go         # Web scan commands
 │   │   └── vulnscan.go        # Vuln scan commands
 │   ├── core/
+│   │   ├── ai/                # AI engine
+│   │   │   ├── engine.go      # AI decision engine
+│   │   │   └── providers/     # AI providers (OpenAI, DeepSeek, Ollama)
+│   │   ├── context/           # Context management
+│   │   │   └── manager.go     # Context state manager
+│   │   ├── dispatcher/        # Task dispatcher
+│   │   │   └── dispatcher.go  # Scenario detection & routing
+│   │   ├── orchestrator/      # Workflow orchestrator
+│   │   │   ├── orchestrator.go # Phase orchestration
+│   │   │   └── phases/        # Phase definitions
+│   │   ├── scheduler/         # Tool scheduler
+│   │   │   └── scheduler.go   # Tool availability & execution
+│   │   ├── script/            # Script generation
+│   │   │   ├── generator.go   # AI-powered script generator
+│   │   │   └── executor.go    # Safe script executor
 │   │   ├── toolmgr/           # Tool manager
 │   │   │   ├── manager.go     # Tool detection & installation
 │   │   │   └── runner.go      # Tool execution
+│   │   ├── merger/            # Result merger
 │   │   └── workflow/          # Workflow engine
 │   │       ├── engine.go      # Core engine with topological sort
 │   │       ├── handlers.go    # Step handlers for each module
@@ -172,7 +240,11 @@ fcapital/
 │   │   ├── webscan/           # Dirsearch, Gobuster, FFUF runners
 │   │   ├── vulnscan/          # Nuclei, SQLMap runners
 │   │   └── utils/             # Encoding, hashing utilities
-│   └── pkg/errors/            # Unified error handling
+│   └── pkg/
+│       ├── errors/            # Unified error handling
+│       ├── formatter/         # Output formatting
+│       ├── logger/            # Session logging
+│       └── toolcheck/         # Tool detection & installation
 ├── configs/
 │   └── tools.yaml             # Tool definitions
 ├── build/                     # Compiled binaries
@@ -181,11 +253,17 @@ fcapital/
 
 ### 🔬 Architecture Highlights
 
-1. **Workflow Engine**: Uses topological sorting to resolve step dependencies. Each step declares `DependsOn`, `InputFrom`, and `InputField` for automatic data flow.
+1. **AI Engine**: Analyzes phase results and recommends next actions. Supports multiple providers (OpenAI, DeepSeek, Ollama).
 
-2. **Tool Runner**: Abstracts tool execution with timeout control, stdin/stdout handling, and progress callbacks. Supports both synchronous and streaming modes.
+2. **Hybrid Dispatcher**: Intelligently routes tasks to either standard tools or AI-generated scripts based on scenario type.
 
-3. **Auto-Install**: Detects OS and available package managers, then attempts installation in priority order. Falls back to manual instructions when automatic install fails.
+3. **Workflow Engine**: Uses topological sorting to resolve step dependencies. Each step declares `DependsOn`, `InputFrom`, and `InputField` for automatic data flow.
+
+4. **Tool Runner**: Abstracts tool execution with timeout control, stdin/stdout handling, and progress callbacks. Supports both synchronous and streaming modes.
+
+5. **Auto-Install**: Detects OS and available package managers, then attempts installation in priority order. Falls back to manual instructions when automatic install fails.
+
+6. **Session Management**: Supports session persistence and recovery. Interrupted sessions can be resumed with full context.
 
 ---
 
@@ -193,18 +271,42 @@ fcapital/
 
 ### 📖 项目简介
 
-**fcapital** 不仅仅是一个工具包装器——它是为专业渗透测试人员设计的**工作流自动化引擎**。当类似框架专注于工具安装时，fcapital 强调**智能工具链联动**、**自动化数据流转**和**全面报告生成**。采用 Go 语言构建，将侦察、扫描和漏洞评估编排成符合真实渗透测试方法论的工作流。
+**fcapital** 不仅仅是一个工具包装器——它是为专业渗透测试人员设计的**AI驱动工作流自动化引擎**。当类似框架专注于工具安装时，fcapital 强调**智能工具链联动**、**AI决策分析**和**混合模式执行**。采用 Go 语言构建，将侦察、扫描和漏洞评估编排成符合真实渗透测试方法论的工作流。
 
 ### 🚀 核心特性
 
 | 特性 | 细节 |
 | :--- | :--- |
-| **🔄 工作流引擎** | 拓扑排序执行，依赖自动解析。步骤通过 `InputFrom`/`InputField` 机制自动串联。 |
+| **🤖 AI 集成** | 支持 OpenAI、DeepSeek、Ollama。AI 分析阶段结果并建议下一步操作。 |
+| **🔄 混合模式** | 标准任务使用成熟工具，非标准任务使用 AI 生成的脚本。 |
 | **🔗 智能数据流** | 子域名枚举 → HTTP探测 → 目录扫描 → 漏洞扫描。零手动干预。 |
 | **📊 报告生成** | HTML（深色主题）、JSON、Markdown 格式。执行摘要 + 技术细节。 |
-| **🛠️ 自动安装** | 支持 11 种包管理器：`apt`、`yum`、`dnf`、`pacman`、`brew`、`choco`、`scoop`、`winget`、`go`、`pip`、`cargo`。 |
-| **🎯 统一接口** | 单一 CLI 控制 12+ 工具。统一的参数、输出格式和错误处理。 |
+| **🛠️ 自动安装** | 支持 11+ 种包管理器：apt、yum、dnf、pacman、brew、choco、scoop、winget、go、pip、cargo。 |
+| **🎯 统一接口** | 单一 CLI 控制 20+ 工具。统一的参数、输出格式和错误处理。 |
 | **⚡ Go 性能** | 原生二进制，并发执行，流式 I/O 处理大输出。 |
+| **🌐 跨平台** | 原生支持 Windows、Linux、macOS，平台特定优化。 |
+
+### 🔄 混合模式
+
+混合模式智能选择标准工具或 AI 生成的脚本：
+
+```bash
+# 在混合模式下运行任务
+fcapital hybrid run "port scan" -t example.com
+fcapital hybrid run "custom poc for CVE-2024-xxxx" -t example.com
+fcapital hybrid run "waf bypass" -t example.com --auto-confirm
+
+# 分析任务类型（不执行）
+fcapital hybrid analyze "port scan"
+fcapital hybrid analyze "custom poc for CVE-2024-xxxx"
+
+# 生成脚本（不执行）
+fcapital hybrid generate "waf bypass script" --language python
+
+# 会话管理
+fcapital hybrid list                           # 列出所有会话
+fcapital hybrid resume session_20240101_120000 # 恢复中断的会话
+```
 
 ### 📊 内置工作流
 
@@ -215,16 +317,25 @@ fcapital/
 | **webapp** | HTTP → 目录 → 漏洞 | Web应用评估 |
 | **vuln** | HTTP → Nuclei | 漏洞扫描 |
 
-### 🛠️ 支持的工具 (12)
+### 🛠️ 支持的工具 (20+)
 
 | 类别 | 工具 |
 | :--- | :--- |
-| **侦察** | httpx, dnsx |
-| **子域名** | subfinder |
-| **端口扫描** | nmap |
-| **Web扫描** | dirsearch, gobuster, ffuf, dirb |
-| **漏洞扫描** | nuclei, sqlmap, wpscan |
-| **密码攻击** | hydra |
+| **侦察** | subfinder, httpx, dnsx, amass |
+| **端口扫描** | nmap, masscan, zmap |
+| **Web扫描** | dirsearch, gobuster, ffuf, feroxbuster, nikto, whatweb |
+| **漏洞扫描** | nuclei, sqlmap, wpscan, joomscan |
+| **密码攻击** | hydra, medusa, ncrack |
+| **SSL/TLS** | sslscan, testssl.sh, openssl |
+| **工具** | curl, wget, python, python3, ruby, go, git, docker |
+
+### 🌐 跨平台支持
+
+| 平台 | 包管理器 | 工具路径 |
+| :--- | :--- | :--- |
+| **Windows** | winget, choco, scoop | `C:\Program Files`, `%USERPROFILE%\go\bin` |
+| **Linux** | apt, yum, dnf, pacman, snap | `/usr/bin`, `/usr/local/bin`, `~/.local/bin` |
+| **macOS** | brew, port | `/usr/local/bin`, `/opt/homebrew/bin` |
 
 ### 🚀 快速开始
 
@@ -238,28 +349,50 @@ go build -o build/fcapital ./cmd/fcapital
 
 # 或使用 Make
 make build
+
+# Windows (PowerShell)
+go build -o build/fcapital.exe ./cmd/fcapital
 ```
 
 #### 快速上手
 
 ```bash
+# 设置 AI API 密钥（选择一个）
+export DEEPSEEK_API_KEY="your-key"    # 推荐（性价比高）
+export OPENAI_API_KEY="your-key"      # GPT-4o
+# 或使用本地 Ollama（无需 API 密钥）
+
+# 运行 AI 驱动扫描
+./build/fcapital ai-scan -t example.com
+
+# 或使用混合模式
+./build/fcapital hybrid run "full assessment" -t example.com
+
 # 检查工具依赖
 ./build/fcapital deps check
 
 # 安装缺失工具（自动检测包管理器）
 ./build/fcapital deps install nmap
 ./build/fcapital deps install --all
-
-# 运行工作流
-./build/fcapital workflow run full -t example.com
-
-# 列出可用工作流
-./build/fcapital workflow list
 ```
 
 #### 命令行示例
 
 ```bash
+# === AI 驱动命令 ===
+fcapital ai-scan -t example.com              # AI 驱动渗透测试
+fcapital ai-scan -t example.com --auto-continue
+fcapital ai-chat                             # 交互式 AI 助手
+fcapital context show                        # 查看当前上下文
+
+# === 混合模式命令 ===
+fcapital hybrid run "port scan" -t example.com
+fcapital hybrid run "custom poc" -t example.com --auto-confirm
+fcapital hybrid analyze "task description"
+fcapital hybrid generate "script task" --language python
+fcapital hybrid list
+fcapital hybrid resume <session-id>
+
 # === 依赖管理 ===
 fcapital deps check              # 检查所有工具
 fcapital deps list               # 列出支持的工具有
@@ -305,6 +438,9 @@ fcapital/
 ├── internal/
 │   ├── cli/                   # CLI命令
 │   │   ├── root.go            # 根命令
+│   │   ├── ai.go              # AI 驱动命令
+│   │   ├── hybrid.go          # 混合模式命令
+│   │   ├── interactive.go     # 交互模式
 │   │   ├── deps.go            # 依赖管理
 │   │   ├── workflow.go        # 工作流命令
 │   │   ├── recon.go           # 侦察命令
@@ -313,9 +449,25 @@ fcapital/
 │   │   ├── webscan.go         # Web扫描命令
 │   │   └── vulnscan.go        # 漏洞扫描命令
 │   ├── core/
+│   │   ├── ai/                # AI 引擎
+│   │   │   ├── engine.go      # AI 决策引擎
+│   │   │   └── providers/     # AI 提供者 (OpenAI, DeepSeek, Ollama)
+│   │   ├── context/           # 上下文管理
+│   │   │   └── manager.go     # 上下文状态管理器
+│   │   ├── dispatcher/        # 任务调度器
+│   │   │   └── dispatcher.go  # 场景检测与路由
+│   │   ├── orchestrator/      # 工作流编排器
+│   │   │   ├── orchestrator.go # 阶段编排
+│   │   │   └── phases/        # 阶段定义
+│   │   ├── scheduler/         # 工具调度器
+│   │   │   └── scheduler.go   # 工具可用性与执行
+│   │   ├── script/            # 脚本生成
+│   │   │   ├── generator.go   # AI 驱动脚本生成器
+│   │   │   └── executor.go    # 安全脚本执行器
 │   │   ├── toolmgr/           # 工具管理器
 │   │   │   ├── manager.go     # 工具检测与安装
 │   │   │   └── runner.go      # 工具执行
+│   │   ├── merger/            # 结果合并
 │   │   └── workflow/          # 工作流引擎
 │   │       ├── engine.go      # 核心引擎（拓扑排序）
 │   │       ├── handlers.go    # 各模块步骤处理器
@@ -327,7 +479,11 @@ fcapital/
 │   │   ├── webscan/           # Dirsearch, Gobuster, FFUF 运行器
 │   │   ├── vulnscan/          # Nuclei, SQLMap 运行器
 │   │   └── utils/             # 编码、哈希工具
-│   └── pkg/errors/            # 统一错误处理
+│   └── pkg/
+│       ├── errors/            # 统一错误处理
+│       ├── formatter/         # 输出格式化
+│       ├── logger/            # 会话日志
+│       └── toolcheck/         # 工具检测与安装
 ├── configs/
 │   └── tools.yaml             # 工具定义
 ├── build/                     # 编译产物
@@ -336,11 +492,17 @@ fcapital/
 
 ### 🔬 架构亮点
 
-1. **工作流引擎**：使用拓扑排序解析步骤依赖。每个步骤声明 `DependsOn`、`InputFrom` 和 `InputField` 实现自动数据流转。
+1. **AI 引擎**：分析阶段结果并推荐下一步操作。支持多种提供者（OpenAI、DeepSeek、Ollama）。
 
-2. **工具运行器**：抽象工具执行，支持超时控制、stdin/stdout 处理和进度回调。支持同步和流式两种模式。
+2. **混合调度器**：根据场景类型智能路由任务到标准工具或 AI 生成的脚本。
 
-3. **自动安装**：检测操作系统和可用包管理器，按优先级尝试安装。自动安装失败时提供手动安装指南。
+3. **工作流引擎**：使用拓扑排序解析步骤依赖。每个步骤声明 `DependsOn`、`InputFrom` 和 `InputField` 实现自动数据流转。
+
+4. **工具运行器**：抽象工具执行，支持超时控制、stdin/stdout 处理和进度回调。支持同步和流式两种模式。
+
+5. **自动安装**：检测操作系统和可用包管理器，按优先级尝试安装。自动安装失败时提供手动安装指南。
+
+6. **会话管理**：支持会话持久化和恢复。中断的会话可以恢复完整上下文。
 
 ---
 
