@@ -437,27 +437,34 @@ func getAIRecommendations(ctx context.Context, provider providers.Provider, sess
 		"results": session.Results,
 	})
 
-	availableTools := ""
+	// 构建已安装工具列表
+	var availableTools []string
+	var missingTools []string
 	if toolCheckResult != nil {
-		var toolNames []string
 		for _, tool := range toolCheckResult.Available {
-			toolNames = append(toolNames, tool.Name)
+			availableTools = append(availableTools, tool.Name)
 		}
-		availableTools = fmt.Sprintf("\n本地已安装工具: %s", strings.Join(toolNames, ", "))
+		for _, tool := range toolCheckResult.Missing {
+			missingTools = append(missingTools, tool.Name)
+		}
 	}
 
 	prompt := fmt.Sprintf(`你是一个渗透测试专家。根据以下测试结果，分析目标并推荐最佳的下一步操作。
 
 目标: %s
 当前阶段: %s
-%s
+
+## 当前系统环境
+- 操作系统: %s
+- 已安装工具 (%d个): %s
+- 未安装工具: %s
 
 测试结果:
 %s
 
 重要说明:
-1. 推荐最适合当前任务的工具，不受本地已安装工具限制
-2. 如果推荐的最佳工具未安装，系统会自动处理安装
+1. 推荐最适合当前任务的工具，不受限于已安装工具
+2. 如果推荐的最佳工具未安装，系统会尝试自动安装
 3. 在 description 中简要说明为什么推荐这个工具
 4. 不要推荐与已执行操作重复的工具
 
@@ -465,11 +472,11 @@ func getAIRecommendations(ctx context.Context, provider providers.Provider, sess
 - id: 序号 (1-5)
 - title: 建议标题 (简短)
 - description: 详细描述（包含推荐理由）
-- tool: 推荐工具名称 (如 nmap, nuclei, wpscan, gobuster 等)
+- tool: 推荐工具名称 (推荐最佳工具，不限制已安装)
 - priority: 优先级 (1-5, 5最高)
 - risk_level: 风险等级 (low/medium/high)
 
-只返回JSON数组，不要其他内容。`, session.Target, session.CurrentPhase, availableTools, string(contextJSON))
+只返回JSON数组，不要其他内容。`, session.Target, session.CurrentPhase, runtime.GOOS, len(availableTools), strings.Join(availableTools, ", "), strings.Join(missingTools, ", "), string(contextJSON))
 
 	req := &providers.ChatRequest{
 		Messages: []providers.Message{

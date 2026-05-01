@@ -320,8 +320,9 @@ func (d *Dispatcher) buildToolArgs(toolName string, targets []string) []string {
 		return []string{"-d", targets[0]}
 
 	case "nuclei":
-		// nuclei needs: -u target
-		return []string{"-u", targets[0]}
+		// nuclei needs: -u target -silent
+		// Note: user should run 'nuclei -update-templates' first
+		return []string{"-u", targets[0], "-silent", "-severity", "critical,high,medium"}
 
 	case "sqlmap":
 		// sqlmap needs: -u target

@@ -1078,16 +1078,25 @@ func (s *scheduler) InstallTool(ctx context.Context, toolName string) error {
     if err != nil {
         return err
     }
-    
+
+    // 检查工具是否支持当前系统
+    if !s.isSupportedOnCurrentOS(toolName) {
+        return &ToolNotSupportedError{
+            ToolName: toolName,
+            OS:       runtime.GOOS,
+            Message:  fmt.Sprintf("%s 不支持 %s 系统", toolName, runtime.GOOS),
+        }
+    }
+
     // 获取可用包管理器
     managers := s.detectPackageManagers()
-    
+
     // 按优先级尝试安装
     for _, method := range def.InstallMethods {
         if !s.isManagerAvailable(method.Type, managers) {
             continue
         }
-        
+
         err := s.tryInstall(ctx, method)
         if err == nil {
             // 验证安装
@@ -1096,9 +1105,112 @@ func (s *scheduler) InstallTool(ctx context.Context, toolName string) error {
             }
         }
     }
+
+    // 所有方法都失败
+    return &ToolInstallFailedError{
+        ToolName: toolName,
+        Message:  "自动安装失败，需要手动安装",
+    }
+}
+```
+
+#### 2.3.4 工具安装失败后的 AI 重推荐流程
+
+```go
+// internal/cli/recon_all.go
+
+func executeNextPhase(ctx context.Context, disp *dispatcher.Dispatcher, gen *script.Generator, 
+    rec Recommendation, target string, session *SessionState, log *logger.Logger, 
+    toolChecker *toolcheck.Checker, tm *toolmgr.ToolManager) {
     
-    // 所有方法都失败，请求AI生成安装方案
-    return s.requestAIInstallGuide(ctx, toolName)
+    fmt.Printf("\n🎯 执行: %s\n", rec.Title)
+    
+    // 1. 检查工具是否已安装
+    toolInfo := toolChecker.CheckTool(rec.Tool)
+    if !toolInfo.Installed {
+        fmt.Printf("⚠️  工具 %s 未安装\n", rec.Tool)
+        
+        // 2. 尝试自动安装
+        success, message := toolcheck.TryAutoInstall(rec.Tool)
+        if success {
+            fmt.Printf("✅ %s\n", message)
+        } else {
+            fmt.Printf("❌ %s\n", message)
+            
+            // 3. 安装失败，告诉 AI 重新推荐
+            newRec := requestAIAlternative(ctx, provider, session, rec, message, toolChecker)
+            if newRec != nil {
+                fmt.Printf("\n🔄 AI 重新推荐: %s (工具: %s)\n", newRec.Title, newRec.Tool)
+                rec = *newRec
+            } else {
+                return
+            }
+        }
+    }
+    
+    // 4. 执行工具
+    // ... 执行逻辑
+}
+
+// requestAIAlternative 请求 AI 重新推荐替代工具
+func requestAIAlternative(ctx context.Context, provider providers.Provider, session *SessionState,
+    failedRec Recommendation, failureReason string, toolChecker *toolcheck.Checker) *Recommendation {
+    
+    // 获取已安装工具列表
+    var availableTools []string
+    for _, tool := range toolChecker.CheckAll().Available {
+        availableTools = append(availableTools, tool.Name)
+    }
+    
+    prompt := fmt.Sprintf(`之前推荐的工具无法使用，请重新推荐。
+
+原推荐:
+- 操作: %s
+- 工具: %s
+- 失败原因: %s
+
+当前系统环境:
+- 操作系统: %s
+- 已安装工具: %s
+
+请推荐一个替代方案，工具必须是已安装列表中的工具。
+以JSON格式返回单个推荐:
+{
+    "title": "操作标题",
+    "description": "详细描述",
+    "tool": "工具名称",
+    "priority": 优先级,
+    "risk_level": "风险等级"
+}`, failedRec.Title, failedRec.Tool, failureReason, runtime.GOOS, strings.Join(availableTools, ", "))
+    
+    // ... 调用 AI 获取新推荐
+}
+```
+
+#### 2.3.5 工具安装失败错误类型
+
+```go
+// internal/pkg/errors/errors.go
+
+// ToolNotSupportedError 工具不支持当前系统
+type ToolNotSupportedError struct {
+    ToolName string
+    OS       string
+    Message  string
+}
+
+func (e *ToolNotSupportedError) Error() string {
+    return fmt.Sprintf("工具 %s 不支持 %s 系统: %s", e.ToolName, e.OS, e.Message)
+}
+
+// ToolInstallFailedError 工具安装失败
+type ToolInstallFailedError struct {
+    ToolName string
+    Message  string
+}
+
+func (e *ToolInstallFailedError) Error() string {
+    return fmt.Sprintf("工具 %s 安装失败: %s", e.ToolName, e.Message)
 }
 ```
 

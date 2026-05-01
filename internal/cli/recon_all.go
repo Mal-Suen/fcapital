@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -25,19 +26,20 @@ import (
 
 // ReconResult 信息收集结果
 type ReconResult struct {
-	Target       string
-	Subdomains   []string
-	HTTPServices []recon.HTTPXResult
-	DNSRecords   []recon.DNSXResult
-	OpenPorts    []portscan.PortInfo
-	WAFInfo      *WAFDetection
-	TechStack    []TechInfo
-	SSLInfo      *SSLInfo
-	Emails       []string
+	Target         string
+	Subdomains     []string
+	HTTPServices   []recon.HTTPXResult
+	DNSRecords     []recon.DNSXResult
+	OpenPorts      []portscan.PortInfo
+	Vulns          []portscan.VulnInfo
+	WAFInfo        *WAFDetection
+	TechStack      []TechInfo
+	SSLInfo        *SSLInfo
+	Emails         []string
 	SensitiveFiles []string
-	CMSInfo      *CMSInfo
-	StartTime    time.Time
-	EndTime      time.Time
+	CMSInfo        *CMSInfo
+	StartTime      time.Time
+	EndTime        time.Time
 }
 
 // WAFDetection WAF 检测结果
@@ -104,6 +106,7 @@ var (
 	reconTarget      string
 	reconDepth       string  // quick, normal, full
 	reconNoAI        bool    // 不进入 AI 模式
+	reconVulnScan    bool    // 启用漏洞扫描
 	reconProvider    string
 	reconModel       string
 	reconAutoConfirm bool
@@ -113,6 +116,7 @@ func init() {
 	reconCmd.Flags().StringVarP(&reconTarget, "target", "t", "", "目标域名")
 	reconCmd.Flags().StringVar(&reconDepth, "depth", "normal", "扫描深度 (quick/normal/full)")
 	reconCmd.Flags().BoolVar(&reconNoAI, "no-ai", false, "仅收集信息，不进入AI模式")
+	reconCmd.Flags().BoolVar(&reconVulnScan, "vuln", false, "启用漏洞扫描 (需要更长时间)")
 	reconCmd.Flags().StringVar(&reconProvider, "provider", "openai", "AI提供者")
 	reconCmd.Flags().StringVar(&reconModel, "model", "", "AI模型")
 	reconCmd.Flags().BoolVar(&reconAutoConfirm, "auto-confirm", false, "自动确认脚本执行")
@@ -126,7 +130,11 @@ func runRecon(cmd *cobra.Command, args []string) {
 
 	printBanner()
 	fmt.Printf("🎯 目标: %s\n", reconTarget)
-	fmt.Printf("📊 扫描深度: %s\n\n", reconDepth)
+	fmt.Printf("📊 扫描深度: %s\n", reconDepth)
+	if reconVulnScan {
+		fmt.Println("🔴 漏洞扫描: 已启用")
+	}
+	fmt.Println()
 
 	// 初始化
 	tm := InitToolManager()
@@ -143,7 +151,7 @@ func runRecon(cmd *cobra.Command, args []string) {
 	}
 
 	// 根据深度决定扫描范围
-	runFullRecon(ctx, tm, result, reconDepth)
+	runFullRecon(ctx, tm, result, reconDepth, reconVulnScan)
 
 	result.EndTime = time.Now()
 
@@ -163,7 +171,7 @@ func runRecon(cmd *cobra.Command, args []string) {
 	startAIPenetration(ctx, result, tm, toolChecker)
 }
 
-func runFullRecon(ctx context.Context, tm *toolmgr.ToolManager, result *ReconResult, depth string) {
+func runFullRecon(ctx context.Context, tm *toolmgr.ToolManager, result *ReconResult, depth string, vulnScan bool) {
 	var wg sync.WaitGroup
 
 	// 1. 子域名枚举
@@ -250,7 +258,11 @@ func runFullRecon(ctx context.Context, tm *toolmgr.ToolManager, result *ReconRes
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		fmt.Println("\n🔍 [4/6] 端口扫描...")
+		scanType := "端口扫描"
+		if vulnScan {
+			scanType = "端口扫描 + 漏洞检测"
+		}
+		fmt.Printf("\n🔍 [4/6] %s...\n", scanType)
 		if tool, err := tm.Get("nmap"); err == nil && tool.IsReady() {
 			runner, err := portscan.NewNmapRunner(tm)
 			if err != nil {
@@ -259,13 +271,27 @@ func runFullRecon(ctx context.Context, tm *toolmgr.ToolManager, result *ReconRes
 			}
 
 			var scanResult *portscan.NmapResult
-			switch depth {
-			case "quick":
-				scanResult, err = runner.QuickScan(ctx, result.Target)
-			case "full":
-				scanResult, err = runner.FullScan(ctx, result.Target)
-			default:
-				scanResult, err = runner.QuickScan(ctx, result.Target)
+			if vulnScan {
+				// 启用漏洞扫描
+				switch depth {
+				case "quick":
+					scanResult, err = runner.QuickScanWithVuln(ctx, result.Target)
+				case "full":
+					// FullScan 默认启用漏洞扫描
+					scanResult, err = runner.FullScan(ctx, result.Target)
+				default:
+					scanResult, err = runner.QuickScanWithVuln(ctx, result.Target)
+				}
+			} else {
+				// 普通扫描
+				switch depth {
+				case "quick":
+					scanResult, err = runner.QuickScan(ctx, result.Target)
+				case "full":
+					scanResult, err = runner.FullScan(ctx, result.Target)
+				default:
+					scanResult, err = runner.QuickScan(ctx, result.Target)
+				}
 			}
 
 			if err != nil {
@@ -273,7 +299,21 @@ func runFullRecon(ctx context.Context, tm *toolmgr.ToolManager, result *ReconRes
 				return
 			}
 			result.OpenPorts = scanResult.Ports
+			result.Vulns = scanResult.Vulns
 			fmt.Printf("   ✅ 发现 %d 个开放端口\n", len(scanResult.Ports))
+			for _, p := range scanResult.Ports {
+				version := ""
+				if p.Version != "" {
+					version = " " + p.Version
+				}
+				fmt.Printf("      - %d/%s %s%s\n", p.Port, p.Protocol, p.Service, version)
+			}
+			if len(scanResult.Vulns) > 0 {
+				fmt.Printf("   🔴 发现 %d 个漏洞!\n", len(scanResult.Vulns))
+				for _, v := range scanResult.Vulns {
+					fmt.Printf("      - [%s] %s (端口 %d, 严重度: %s)\n", v.VulnID, v.Name, v.Port, v.Severity)
+				}
+			}
 		} else {
 			fmt.Println("   ⚠️  nmap 未安装，跳过")
 		}
@@ -369,7 +409,22 @@ func printReconSummary(result *ReconResult) {
 	if len(result.OpenPorts) > 0 {
 		fmt.Printf("\n🔌 开放端口 (%d):\n", len(result.OpenPorts))
 		for _, p := range result.OpenPorts {
-			fmt.Printf("   - %d/%s %s\n", p.Port, p.Protocol, p.Service)
+			version := ""
+			if p.Version != "" {
+				version = " " + p.Version
+			}
+			fmt.Printf("   - %d/%s %s%s\n", p.Port, p.Protocol, p.Service, version)
+		}
+	}
+
+	if len(result.Vulns) > 0 {
+		fmt.Printf("\n🔴 发现漏洞 (%d):\n", len(result.Vulns))
+		for _, v := range result.Vulns {
+			severity := v.Severity
+			if severity == "" {
+				severity = "unknown"
+			}
+			fmt.Printf("   - [%s] %s (端口 %d, 严重度: %s)\n", v.VulnID, v.Name, v.Port, severity)
 		}
 	}
 
@@ -475,7 +530,7 @@ func startAIPenetration(ctx context.Context, reconResult *ReconResult, tm *toolm
 	fmt.Printf("\n▶️  自动执行: %s (优先级 %d)\n", selected.Title, selected.Priority)
 
 	// 执行选中的任务
-	executeNextPhase(ctx, disp, gen, selected, reconResult.Target, session, log, toolChecker, tm)
+	executeNextPhase(ctx, provider, disp, gen, selected, reconResult.Target, session, log, toolChecker, tm)
 
 	// 继续交互式循环
 	runInteractiveLoop(ctx, provider, disp, gen, session, log, toolChecker, tm)
@@ -496,6 +551,18 @@ func getAIRecommendationsWithRecon(ctx context.Context, provider providers.Provi
 	// 构建详细的上下文信息
 	contextJSON := jsonMarshal(reconContext)
 
+	// 构建已安装工具列表
+	var availableTools []string
+	for _, tool := range toolCheckResult.Available {
+		availableTools = append(availableTools, tool.Name)
+	}
+
+	// 构建未安装工具列表
+	var missingTools []string
+	for _, tool := range toolCheckResult.Missing {
+		missingTools = append(missingTools, tool.Name)
+	}
+
 	prompt := fmt.Sprintf(`你是一个资深渗透测试专家。根据以下信息收集结果，分析目标并推荐最佳的下一步渗透操作。
 
 目标: %s
@@ -505,22 +572,29 @@ func getAIRecommendationsWithRecon(ctx context.Context, provider providers.Provi
 
 已完成的操作: %s
 
+## 当前系统环境
+- 操作系统: %s
+- 已安装工具 (%d个): %s
+- 未安装工具: %s
+
 重要说明:
-1. 根据收集到的信息，推荐最有可能成功的攻击路径
-2. 优先考虑：开放端口服务漏洞、技术栈已知漏洞、敏感路径
-3. 如果发现 CMS（WordPress/Joomla等），推荐相关扫描
-4. 如果发现数据库端口开放，推荐弱口令检测
-5. 如果发现特定技术栈，推荐相关 CVE 检测
+1. 推荐最适合当前任务的工具，不受限于已安装工具
+2. 如果推荐的最佳工具未安装，系统会尝试自动安装
+3. 根据收集到的信息，推荐最有可能成功的攻击路径
+4. 优先考虑：开放端口服务漏洞、技术栈已知漏洞、敏感路径
+5. 如果发现 CMS（WordPress/Joomla等），推荐相关扫描
+6. 如果发现数据库端口开放，推荐弱口令检测
+7. 如果发现特定技术栈，推荐相关 CVE 检测
 
 请以JSON数组格式返回3-5个下一步建议，每个建议包含:
 - id: 序号 (1-5)
 - title: 建议标题 (简短)
 - description: 详细描述（包含推荐理由）
-- tool: 推荐工具名称 (如 nuclei, wpscan, sqlmap, gobuster 等)
+- tool: 推荐工具名称 (推荐最佳工具，不限制已安装)
 - priority: 优先级 (1-5, 5最高)
 - risk_level: 风险等级 (low/medium/high)
 
-只返回JSON数组，不要其他内容。`, session.Target, string(contextJSON), session.History)
+只返回JSON数组，不要其他内容。`, session.Target, string(contextJSON), session.History, runtime.GOOS, toolCheckResult.InstalledCount, strings.Join(availableTools, ", "), strings.Join(missingTools, ", "))
 
 	req := &providers.ChatRequest{
 		Messages: []providers.Message{
@@ -536,8 +610,115 @@ func getAIRecommendationsWithRecon(ctx context.Context, provider providers.Provi
 	return parseAIRecommendations(resp.Content)
 }
 
-func executeNextPhase(ctx context.Context, disp *dispatcher.Dispatcher, gen *script.Generator, rec Recommendation, target string, session *SessionState, log *logger.Logger, toolChecker *toolcheck.Checker, tm *toolmgr.ToolManager) {
+// requestAIAlternative 请求 AI 重新推荐替代工具
+func requestAIAlternative(ctx context.Context, provider providers.Provider, session *SessionState, failedRec Recommendation, failureReason string, toolChecker *toolcheck.Checker) *Recommendation {
+	// 获取已安装工具列表
+	var availableTools []string
+	checkResult := toolChecker.CheckAll()
+	for _, tool := range checkResult.Available {
+		availableTools = append(availableTools, tool.Name)
+	}
+
+	prompt := fmt.Sprintf(`之前推荐的工具无法使用，请重新推荐一个替代方案。
+
+原推荐:
+- 操作: %s
+- 工具: %s
+- 失败原因: %s
+
+当前系统环境:
+- 操作系统: %s
+- 已安装工具: %s
+
+重要说明:
+1. 必须从已安装工具列表中选择工具
+2. 推荐一个能实现类似功能的替代方案
+3. 如果没有合适的工具，返回 null
+
+请以JSON格式返回单个推荐:
+{
+    "id": 1,
+    "title": "操作标题",
+    "description": "详细描述（说明为什么这个替代方案可行）",
+    "tool": "工具名称（必须从已安装工具列表中选择）",
+    "priority": 优先级,
+    "risk_level": "风险等级"
+}
+
+如果没有合适的替代方案，返回:
+null
+
+只返回JSON，不要其他内容。`, failedRec.Title, failedRec.Tool, failureReason, runtime.GOOS, strings.Join(availableTools, ", "))
+
+	resp, err := provider.Chat(ctx, &providers.ChatRequest{
+		Messages: []providers.Message{
+			{Role: "user", Content: prompt},
+		},
+	})
+	if err != nil {
+		return nil
+	}
+
+	// 解析响应
+	content := strings.TrimSpace(resp.Content)
+	if content == "null" || content == "" {
+		return nil
+	}
+
+	// 尝试提取 JSON
+	jsonStart := strings.Index(content, "{")
+	jsonEnd := strings.LastIndex(content, "}")
+	if jsonStart == -1 || jsonEnd == -1 {
+		return nil
+	}
+	jsonStr := content[jsonStart : jsonEnd+1]
+
+	var rec Recommendation
+	if err := json.Unmarshal([]byte(jsonStr), &rec); err != nil {
+		return nil
+	}
+
+	return &rec
+}
+
+func executeNextPhase(ctx context.Context, provider providers.Provider, disp *dispatcher.Dispatcher, gen *script.Generator, rec Recommendation, target string, session *SessionState, log *logger.Logger, toolChecker *toolcheck.Checker, tm *toolmgr.ToolManager) Recommendation {
 	fmt.Printf("\n🎯 执行: %s\n", rec.Title)
+
+	// 1. 检查工具是否已安装
+	toolInfo := toolChecker.CheckTool(rec.Tool)
+	if !toolInfo.Installed {
+		fmt.Printf("⚠️  工具 %s 未安装\n", rec.Tool)
+
+		// 2. 检查工具是否支持当前系统
+		if !toolInfo.Supported {
+			fmt.Printf("❌ %s 不支持 %s 系统\n", rec.Tool, runtime.GOOS)
+
+			// 3. 告诉 AI 重新推荐
+			newRec := requestAIAlternative(ctx, provider, session, rec, fmt.Sprintf("%s 不支持 %s 系统", rec.Tool, runtime.GOOS), toolChecker)
+			if newRec != nil {
+				fmt.Printf("\n🔄 AI 重新推荐: %s (工具: %s)\n", newRec.Title, newRec.Tool)
+				return executeNextPhase(ctx, provider, disp, gen, *newRec, target, session, log, toolChecker, tm)
+			}
+			return rec
+		}
+
+		// 4. 尝试自动安装
+		fmt.Printf("🔄 正在安装 %s...\n", rec.Tool)
+		success, message := toolcheck.TryAutoInstall(rec.Tool)
+		if success {
+			fmt.Printf("✅ %s\n", message)
+		} else {
+			fmt.Printf("❌ %s\n", message)
+
+			// 5. 安装失败，告诉 AI 重新推荐
+			newRec := requestAIAlternative(ctx, provider, session, rec, message, toolChecker)
+			if newRec != nil {
+				fmt.Printf("\n🔄 AI 重新推荐: %s (工具: %s)\n", newRec.Title, newRec.Tool)
+				return executeNextPhase(ctx, provider, disp, gen, *newRec, target, session, log, toolChecker, tm)
+			}
+			return rec
+		}
+	}
 
 	contextData := map[string]interface{}{
 		"target": target,
@@ -546,7 +727,7 @@ func executeNextPhase(ctx context.Context, disp *dispatcher.Dispatcher, gen *scr
 	result, err := disp.Dispatch(ctx, rec.Tool, contextData)
 	if err != nil {
 		fmt.Printf("❌ 调度失败: %v\n", err)
-		return
+		return rec
 	}
 
 	fmt.Printf("📊 使用工具: %s\n", result.ToolName)
@@ -563,7 +744,7 @@ func executeNextPhase(ctx context.Context, disp *dispatcher.Dispatcher, gen *scr
 
 	if err != nil {
 		fmt.Printf("❌ 执行失败: %v\n", err)
-		return
+		return rec
 	}
 
 	// 更新会话状态
@@ -591,6 +772,8 @@ func executeNextPhase(ctx context.Context, disp *dispatcher.Dispatcher, gen *scr
 	}
 	fmt.Println(strings.Repeat("-", 50))
 	fmt.Printf("✅ %s\n", summary)
+
+	return rec
 }
 
 func runInteractiveLoop(ctx context.Context, provider providers.Provider, disp *dispatcher.Dispatcher, gen *script.Generator, session *SessionState, log *logger.Logger, toolChecker *toolcheck.Checker, tm *toolmgr.ToolManager) {
@@ -637,7 +820,7 @@ func runInteractiveLoop(ctx context.Context, provider providers.Provider, disp *
 		}
 
 		selected := recommendations[choice-1]
-		executeNextPhase(ctx, disp, gen, selected, session.Target, session, log, toolChecker, tm)
+		executeNextPhase(ctx, provider, disp, gen, selected, session.Target, session, log, toolChecker, tm)
 	}
 }
 

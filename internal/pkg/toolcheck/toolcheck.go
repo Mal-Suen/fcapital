@@ -9,11 +9,12 @@ import (
 
 // ToolInfo 工具信息
 type ToolInfo struct {
-	Name     string `json:"name"`
-	Installed bool  `json:"installed"`
-	Version  string `json:"version,omitempty"`
-	Path     string `json:"path,omitempty"`
-	Category string `json:"category"` // scanner, enumerator, exploiter, utility
+	Name      string `json:"name"`
+	Installed bool   `json:"installed"`
+	Supported bool   `json:"supported"` // 是否支持当前系统
+	Version   string `json:"version,omitempty"`
+	Path      string `json:"path,omitempty"`
+	Category  string `json:"category"` // scanner, enumerator, exploiter, utility
 }
 
 // ToolRegistry 工具注册表
@@ -110,8 +111,9 @@ func (c *Checker) CheckAll() *CheckResult {
 // CheckTool 检测单个工具
 func (c *Checker) CheckTool(name string) ToolInfo {
 	info := ToolInfo{
-		Name: name,
+		Name:      name,
 		Installed: false,
+		Supported: isToolSupported(name), // 检查是否支持当前系统
 	}
 
 	// 尝试查找工具路径
@@ -119,7 +121,7 @@ func (c *Checker) CheckTool(name string) ToolInfo {
 	if err == nil {
 		info.Installed = true
 		info.Path = path
-		
+
 		// 尝试获取版本
 		version := c.getToolVersion(name, path)
 		if version != "" {
@@ -128,6 +130,28 @@ func (c *Checker) CheckTool(name string) ToolInfo {
 	}
 
 	return info
+}
+
+// isToolSupported 检查工具是否支持当前系统
+func isToolSupported(name string) bool {
+	os := runtime.GOOS
+
+	// Windows 不支持的工具列表
+	windowsUnsupported := map[string]bool{
+		"wpscan":    true, // 需要 Ruby + 特定依赖，Windows 上很难安装
+		"hydra":     true, // 需要 Cygwin 或 WSL
+		"medusa":    true,
+		"ncrack":    true,
+		"testssl.sh": true, // 需要 bash 环境
+		"joomscan":  true,  // Perl 脚本，Windows 兼容性差
+		"whatweb":   true,  // Ruby 工具，Windows 兼容性差
+	}
+
+	if os == "windows" {
+		return !windowsUnsupported[name]
+	}
+
+	return true // Linux 和 macOS 支持大多数工具
 }
 
 // getToolVersion 获取工具版本
