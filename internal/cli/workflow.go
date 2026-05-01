@@ -47,10 +47,10 @@ var workflowListCmd = &cobra.Command{
 }
 
 var (
-	workflowTarget   string
-	workflowOutput   string
-	workflowTimeout  int
-	workflowReport   bool
+	workflowTarget  string
+	workflowOutput  string
+	workflowTimeout int
+	workflowReport  bool
 )
 
 func init() {
@@ -171,7 +171,7 @@ func runWorkflowList(cmd *cobra.Command, args []string) {
 			}
 			fmt.Printf("%s", step.Name)
 		}
-		fmt.Println("\n")
+		fmt.Println()
 	}
 }
 

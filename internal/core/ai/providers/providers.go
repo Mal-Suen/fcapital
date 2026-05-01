@@ -16,7 +16,7 @@ import (
 
 // Message represents a chat message.
 type Message struct {
-	Role    string `json:"role"`    // system, user, assistant
+	Role    string `json:"role"` // system, user, assistant
 	Content string `json:"content"`
 }
 
@@ -73,12 +73,12 @@ func NewOpenAIProvider(apiKey, model, baseURL string) *OpenAIProvider {
 	if model == "" {
 		model = "gpt-4o"
 	}
-	
+
 	// Create transport that ignores proxy
 	transport := &http.Transport{
 		Proxy: nil, // Disable proxy
 	}
-	
+
 	return &OpenAIProvider{
 		apiKey:  apiKey,
 		model:   model,
@@ -141,7 +141,7 @@ func (p *OpenAIProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 
 	// Ensure baseURL ends correctly
 	apiURL := strings.TrimSpace(p.baseURL)
-	
+
 	// If baseURL already ends with /chat/completions, use it directly
 	if strings.HasSuffix(apiURL, "/chat/completions") {
 		// Use as-is

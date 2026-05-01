@@ -57,35 +57,35 @@ type PhaseOutput struct {
 
 // RunOptions represents options for running a workflow.
 type RunOptions struct {
-	AutoContinue    bool     `json:"auto_continue"`     // AI决策后自动继续
-	ConfirmCritical bool     `json:"confirm_critical"`  // 关键操作需要确认
-	SkipPhases      []string `json:"skip_phases"`       // 要跳过的阶段
-	Timeout         time.Duration `json:"timeout"`       // 单阶段超时
+	AutoContinue    bool          `json:"auto_continue"`    // AI决策后自动继续
+	ConfirmCritical bool          `json:"confirm_critical"` // 关键操作需要确认
+	SkipPhases      []string      `json:"skip_phases"`      // 要跳过的阶段
+	Timeout         time.Duration `json:"timeout"`          // 单阶段超时
 }
 
 // RunResult represents the result of a workflow run.
 type RunResult struct {
-	SessionID    string                    `json:"session_id"`
-	Target       string                    `json:"target"`
-	Status       string                    `json:"status"`
-	PhaseResults map[string]*PhaseOutput   `json:"phase_results"`
-	StartTime    time.Time                 `json:"start_time"`
-	EndTime      time.Time                 `json:"end_time"`
-	Error        string                    `json:"error,omitempty"`
+	SessionID    string                  `json:"session_id"`
+	Target       string                  `json:"target"`
+	Status       string                  `json:"status"`
+	PhaseResults map[string]*PhaseOutput `json:"phase_results"`
+	StartTime    time.Time               `json:"start_time"`
+	EndTime      time.Time               `json:"end_time"`
+	Error        string                  `json:"error,omitempty"`
 }
 
 // Orchestrator manages phase execution.
 type Orchestrator struct {
-	phases      map[string]Phase
-	phaseOrder  []string
-	aiEngine    *ai.Engine
-	ctxMgr      *appcontext.Manager
-	scheduler   *scheduler.Scheduler
-	logger      Logger
-	mu          sync.RWMutex
-	paused      bool
-	pauseCond   *sync.Cond
-	cancel      context.CancelFunc
+	phases     map[string]Phase
+	phaseOrder []string
+	aiEngine   *ai.Engine
+	ctxMgr     *appcontext.Manager
+	scheduler  *scheduler.Scheduler
+	logger     Logger
+	mu         sync.RWMutex
+	paused     bool
+	pauseCond  *sync.Cond
+	cancel     context.CancelFunc
 }
 
 // Logger interface for logging.
@@ -225,7 +225,7 @@ func (o *Orchestrator) Run(ctx context.Context, target string, opts *RunOptions)
 			Target:      target,
 			Context:     o.ctxMgr.GetContext(),
 			PrevResults: result.PhaseResults,
-			Options:     map[string]interface{}{
+			Options: map[string]interface{}{
 				"auto_continue":    opts.AutoContinue,
 				"confirm_critical": opts.ConfirmCritical,
 				"timeout":          opts.Timeout,

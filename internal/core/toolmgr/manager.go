@@ -50,16 +50,16 @@ type InstallCmd struct {
 	Port string `json:"port,omitempty" yaml:"port,omitempty"` // MacPorts
 
 	// Windows
-	Choco  string `json:"choco,omitempty" yaml:"choco,omitempty"`     // Chocolatey
-	Scoop  string `json:"scoop,omitempty" yaml:"scoop,omitempty"`     // Scoop
-	Winget string `json:"winget,omitempty" yaml:"winget,omitempty"`   // Windows Package Manager
+	Choco  string `json:"choco,omitempty" yaml:"choco,omitempty"`   // Chocolatey
+	Scoop  string `json:"scoop,omitempty" yaml:"scoop,omitempty"`   // Scoop
+	Winget string `json:"winget,omitempty" yaml:"winget,omitempty"` // Windows Package Manager
 
 	// 跨平台
-	Go   string `json:"go,omitempty" yaml:"go,omitempty"`     // Go install
-	Pip  string `json:"pip,omitempty" yaml:"pip,omitempty"`   // pip install
-	Pip3 string `json:"pip3,omitempty" yaml:"pip3,omitempty"` // pip3 install
-	Gem  string `json:"gem,omitempty" yaml:"gem,omitempty"`   // gem install
-	Npm  string `json:"npm,omitempty" yaml:"npm,omitempty"`   // npm install
+	Go    string `json:"go,omitempty" yaml:"go,omitempty"`       // Go install
+	Pip   string `json:"pip,omitempty" yaml:"pip,omitempty"`     // pip install
+	Pip3  string `json:"pip3,omitempty" yaml:"pip3,omitempty"`   // pip3 install
+	Gem   string `json:"gem,omitempty" yaml:"gem,omitempty"`     // gem install
+	Npm   string `json:"npm,omitempty" yaml:"npm,omitempty"`     // npm install
 	Cargo string `json:"cargo,omitempty" yaml:"cargo,omitempty"` // cargo install
 
 	// 源码安装
@@ -282,16 +282,16 @@ func (tm *ToolManager) loadDefaultTools() {
 			Name: "Nmap", Binary: "nmap", Category: "portscan",
 			Description: "Network Security Scanner",
 			Install: InstallCmd{
-				Apt:    "sudo apt install nmap -y",
-				Yum:    "sudo yum install nmap -y",
-				Dnf:    "sudo dnf install nmap -y",
-				Pacman: "sudo pacman -S nmap --noconfirm",
-				Zypper: "sudo zypper install -y nmap",
-				Apk:    "sudo apk add nmap",
-				Brew:   "brew install nmap",
-				Choco:  "choco install nmap -y",
-				Scoop:  "scoop install nmap",
-				Winget: "Insecure.Nmap",
+				Apt:           "sudo apt install nmap -y",
+				Yum:           "sudo yum install nmap -y",
+				Dnf:           "sudo dnf install nmap -y",
+				Pacman:        "sudo pacman -S nmap --noconfirm",
+				Zypper:        "sudo zypper install -y nmap",
+				Apk:           "sudo apk add nmap",
+				Brew:          "brew install nmap",
+				Choco:         "choco install nmap -y",
+				Scoop:         "scoop install nmap",
+				Winget:        "Insecure.Nmap",
 				ManualWindows: "Download from https://nmap.org/download.html",
 			},
 		},
@@ -299,10 +299,10 @@ func (tm *ToolManager) loadDefaultTools() {
 			Name: "Dirsearch", Binary: "dirsearch", Category: "webscan",
 			Description: "Web Path Scanner",
 			Install: InstallCmd{
-				Apt:  "sudo apt install dirsearch -y",
-				Yum:  "sudo yum install dirsearch -y",
-				Pip:  "pip install dirsearch",
-				Git:  "git clone https://github.com/maurosoria/dirsearch.git",
+				Apt: "sudo apt install dirsearch -y",
+				Yum: "sudo yum install dirsearch -y",
+				Pip: "pip install dirsearch",
+				Git: "git clone https://github.com/maurosoria/dirsearch.git",
 			},
 		},
 		{
@@ -319,10 +319,10 @@ func (tm *ToolManager) loadDefaultTools() {
 			Name: "Gobuster", Binary: "gobuster", Category: "webscan",
 			Description: "Directory/File/DNS Busting Tool",
 			Install: InstallCmd{
-				Apt:    "sudo apt install gobuster -y",
-				Yum:    "sudo yum install gobuster -y",
-				Brew:   "brew install gobuster",
-				Go:     "go install github.com/OJ/gobuster/v3@latest",
+				Apt:  "sudo apt install gobuster -y",
+				Yum:  "sudo yum install gobuster -y",
+				Brew: "brew install gobuster",
+				Go:   "go install github.com/OJ/gobuster/v3@latest",
 			},
 		},
 		{
@@ -338,10 +338,10 @@ func (tm *ToolManager) loadDefaultTools() {
 			Name: "SQLMap", Binary: "sqlmap", Category: "vulnscan",
 			Description: "Automatic SQL Injection Tool",
 			Install: InstallCmd{
-				Apt:  "sudo apt install sqlmap -y",
-				Yum:  "sudo yum install sqlmap -y",
-				Pip:  "pip install sqlmap",
-				Git:  "git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git",
+				Apt: "sudo apt install sqlmap -y",
+				Yum: "sudo yum install sqlmap -y",
+				Pip: "pip install sqlmap",
+				Git: "git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git",
 			},
 		},
 		{

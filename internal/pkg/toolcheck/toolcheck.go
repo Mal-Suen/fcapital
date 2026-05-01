@@ -24,7 +24,7 @@ var ToolRegistry = []ToolInfo{
 	{Name: "nuclei", Category: "scanner"},
 	{Name: "masscan", Category: "scanner"},
 	{Name: "zmap", Category: "scanner"},
-	
+
 	// Web扫描器
 	{Name: "nikto", Category: "scanner"},
 	{Name: "wpscan", Category: "scanner"},
@@ -35,23 +35,23 @@ var ToolRegistry = []ToolInfo{
 	{Name: "gobuster", Category: "scanner"},
 	{Name: "feroxbuster", Category: "scanner"},
 	{Name: "dirsearch", Category: "scanner"},
-	
+
 	// 子域名枚举
 	{Name: "subfinder", Category: "enumerator"},
 	{Name: "amass", Category: "enumerator"},
 	{Name: "dnsx", Category: "enumerator"},
-	
+
 	// 漏洞利用
 	{Name: "sqlmap", Category: "exploiter"},
 	{Name: "hydra", Category: "exploiter"},
 	{Name: "medusa", Category: "exploiter"},
 	{Name: "ncrack", Category: "exploiter"},
-	
+
 	// SSL/证书
 	{Name: "sslscan", Category: "utility"},
 	{Name: "testssl.sh", Category: "utility"},
 	{Name: "openssl", Category: "utility"},
-	
+
 	// 其他工具
 	{Name: "curl", Category: "utility"},
 	{Name: "wget", Category: "utility"},
@@ -66,10 +66,10 @@ var ToolRegistry = []ToolInfo{
 
 // CheckResult 检测结果
 type CheckResult struct {
-	Available   []ToolInfo `json:"available"`
-	Missing     []ToolInfo `json:"missing"`
-	TotalCount  int        `json:"total_count"`
-	InstalledCount int     `json:"installed_count"`
+	Available      []ToolInfo `json:"available"`
+	Missing        []ToolInfo `json:"missing"`
+	TotalCount     int        `json:"total_count"`
+	InstalledCount int        `json:"installed_count"`
 }
 
 // Checker 工具检测器
@@ -87,16 +87,16 @@ func NewChecker() *Checker {
 // CheckAll 检测所有工具
 func (c *Checker) CheckAll() *CheckResult {
 	result := &CheckResult{
-		Available:   []ToolInfo{},
-		Missing:     []ToolInfo{},
-		TotalCount:  len(c.tools),
+		Available:      []ToolInfo{},
+		Missing:        []ToolInfo{},
+		TotalCount:     len(c.tools),
 		InstalledCount: 0,
 	}
 
 	for _, tool := range c.tools {
 		info := c.CheckTool(tool.Name)
 		info.Category = tool.Category
-		
+
 		if info.Installed {
 			result.Available = append(result.Available, info)
 			result.InstalledCount++
@@ -138,13 +138,13 @@ func isToolSupported(name string) bool {
 
 	// Windows 不支持的工具列表
 	windowsUnsupported := map[string]bool{
-		"wpscan":    true, // 需要 Ruby + 特定依赖，Windows 上很难安装
-		"hydra":     true, // 需要 Cygwin 或 WSL
-		"medusa":    true,
-		"ncrack":    true,
+		"wpscan":     true, // 需要 Ruby + 特定依赖，Windows 上很难安装
+		"hydra":      true, // 需要 Cygwin 或 WSL
+		"medusa":     true,
+		"ncrack":     true,
 		"testssl.sh": true, // 需要 bash 环境
-		"joomscan":  true,  // Perl 脚本，Windows 兼容性差
-		"whatweb":   true,  // Ruby 工具，Windows 兼容性差
+		"joomscan":   true, // Perl 脚本，Windows 兼容性差
+		"whatweb":    true, // Ruby 工具，Windows 兼容性差
 	}
 
 	if os == "windows" {
@@ -157,7 +157,7 @@ func isToolSupported(name string) bool {
 // getToolVersion 获取工具版本
 func (c *Checker) getToolVersion(name, path string) string {
 	var cmd *exec.Cmd
-	
+
 	switch name {
 	case "nmap":
 		cmd = exec.Command(path, "--version")
@@ -238,17 +238,17 @@ func (c *Checker) GetToolInfo(name string) ToolInfo {
 // FormatToolList 格式化工具列表用于 AI prompt
 func (c *Checker) FormatToolList(result *CheckResult) string {
 	var sb strings.Builder
-	
+
 	sb.WriteString("## 本机已安装的工具:\n")
 	for _, tool := range result.Available {
 		sb.WriteString(fmt.Sprintf("- %s (%s): %s\n", tool.Name, tool.Category, tool.Version))
 	}
-	
+
 	sb.WriteString("\n## 本机未安装的工具:\n")
 	for _, tool := range result.Missing {
 		sb.WriteString(fmt.Sprintf("- %s (%s)\n", tool.Name, tool.Category))
 	}
-	
+
 	return sb.String()
 }
 
@@ -264,7 +264,7 @@ func (c *Checker) FormatAvailableTools(result *CheckResult) string {
 // GetInstallInstructions 获取安装指令
 func GetInstallInstructions(name string) string {
 	os := runtime.GOOS
-	
+
 	switch name {
 	case "wpscan":
 		switch os {
@@ -294,7 +294,7 @@ func GetInstallInstructions(name string) string {
   # macOS
   brew install wpscan`
 		}
-		
+
 	case "nuclei":
 		switch os {
 		case "windows":
@@ -322,7 +322,7 @@ func GetInstallInstructions(name string) string {
 方法3: Docker
   docker pull projectdiscovery/nuclei`
 		}
-		
+
 	case "gobuster":
 		switch os {
 		case "windows":
@@ -341,7 +341,7 @@ func GetInstallInstructions(name string) string {
   # macOS
   brew install gobuster`
 		}
-		
+
 	case "ffuf":
 		switch os {
 		case "windows":
@@ -360,7 +360,7 @@ func GetInstallInstructions(name string) string {
   # macOS
   brew install ffuf`
 		}
-		
+
 	case "subfinder":
 		switch os {
 		case "windows":
@@ -379,7 +379,7 @@ func GetInstallInstructions(name string) string {
   # macOS
   brew install subfinder`
 		}
-		
+
 	case "httpx":
 		switch os {
 		case "windows":
@@ -398,7 +398,7 @@ func GetInstallInstructions(name string) string {
   # macOS
   brew install httpx`
 		}
-		
+
 	case "sqlmap":
 		return `# SQLMap 安装
 方法1: Git clone (推荐)
@@ -410,7 +410,7 @@ func GetInstallInstructions(name string) string {
 
 方法3: Docker
   docker pull sqlmap/sqlmap`
-		
+
 	case "hydra":
 		switch os {
 		case "windows":
@@ -434,7 +434,7 @@ func GetInstallInstructions(name string) string {
   cd thc-hydra
   ./configure && make && make install`
 		}
-		
+
 	case "nikto":
 		return `# Nikto 安装
 方法1: Git clone (推荐)
@@ -451,7 +451,7 @@ func GetInstallInstructions(name string) string {
 
 方法3: Docker
   docker pull sullo/nikto`
-		
+
 	case "amass":
 		switch os {
 		case "windows":
@@ -470,7 +470,7 @@ func GetInstallInstructions(name string) string {
   # macOS
   brew install amass`
 		}
-		
+
 	case "dirsearch":
 		return `# Dirsearch 安装
 方法1: Git clone (推荐)
@@ -483,7 +483,7 @@ func GetInstallInstructions(name string) string {
 
 方法3: Docker
   docker pull maurosoria/dirsearch`
-		
+
 	case "feroxbuster":
 		switch os {
 		case "windows":
@@ -502,7 +502,7 @@ func GetInstallInstructions(name string) string {
   # macOS
   brew install feroxbuster`
 		}
-		
+
 	case "sslscan":
 		switch os {
 		case "windows":
@@ -518,7 +518,7 @@ func GetInstallInstructions(name string) string {
   # macOS
   brew install sslscan`
 		}
-		
+
 	case "testssl.sh":
 		return `# testssl.sh 安装
 方法1: Git clone (推荐)
@@ -528,7 +528,7 @@ func GetInstallInstructions(name string) string {
 
 方法2: Docker
   docker pull drwetter/testssl.sh`
-		
+
 	case "whatweb":
 		switch os {
 		case "windows":
@@ -547,7 +547,7 @@ func GetInstallInstructions(name string) string {
   # macOS
   brew install whatweb`
 		}
-		
+
 	case "joomscan":
 		return `# JoomScan 安装
 方法1: Git clone (推荐)
@@ -557,7 +557,7 @@ func GetInstallInstructions(name string) string {
 
 方法2: Docker
   docker pull owasp/joomscan`
-		
+
 	case "masscan":
 		switch os {
 		case "windows":
@@ -571,7 +571,7 @@ func GetInstallInstructions(name string) string {
   cd masscan
   make && make install`
 		}
-		
+
 	default:
 		return fmt.Sprintf(`# %s 安装
 请查阅官方文档或使用搜索引擎查找安装方法。
@@ -582,14 +582,14 @@ func GetInstallInstructions(name string) string {
 - 包管理器: apt/brew/snap install %s
 - Docker: docker pull xxx/%s`, name, name, name, name, name, name)
 	}
-	
+
 	return ""
 }
 
 // TryAutoInstall 尝试自动安装工具
 func TryAutoInstall(name string) (bool, string) {
 	os := runtime.GOOS
-	
+
 	switch name {
 	// Go 工具 - 可以自动安装
 	case "nuclei", "subfinder", "httpx", "gobuster", "ffuf", "amass", "feroxbuster":

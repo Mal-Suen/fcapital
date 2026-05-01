@@ -32,11 +32,11 @@ type AuditRule struct {
 
 // AuditResult represents the result of a code audit.
 type AuditResult struct {
-	Score      int      `json:"score"`
-	Warnings   []string `json:"warnings"`
-	Findings   []Finding `json:"findings"`
-	Passed     bool     `json:"passed"`
-	Recommendations []string `json:"recommendations"`
+	Score           int       `json:"score"`
+	Warnings        []string  `json:"warnings"`
+	Findings        []Finding `json:"findings"`
+	Passed          bool      `json:"passed"`
+	Recommendations []string  `json:"recommendations"`
 }
 
 // Finding represents a specific audit finding.
@@ -60,10 +60,10 @@ func NewAuditor() *Auditor {
 // Audit performs a security audit on the given code.
 func (a *Auditor) Audit(code string) *AuditResult {
 	result := &AuditResult{
-		Score:      100,
-		Warnings:   []string{},
-		Findings:   []Finding{},
-		Passed:     true,
+		Score:           100,
+		Warnings:        []string{},
+		Findings:        []Finding{},
+		Passed:          true,
 		Recommendations: []string{},
 	}
 
@@ -95,9 +95,9 @@ func (a *Auditor) Audit(code string) *AuditResult {
 	for _, rule := range a.rules {
 		if passed, msg := rule.Check(code); !passed {
 			result.Findings = append(result.Findings, Finding{
-				Severity:   "medium",
-				Pattern:    rule.Name,
-				Message:    msg,
+				Severity: "medium",
+				Pattern:  rule.Name,
+				Message:  msg,
 			})
 			result.Warnings = append(result.Warnings,
 				formatWarning("medium", rule.Name, msg))
@@ -206,14 +206,14 @@ func getScorePenalty(severity string) int {
 
 func getRecommendation(pattern string) string {
 	recommendations := map[string]string{
-		"file_deletion":       "避免使用文件删除操作，或使用临时目录",
-		"system_modification": "避免修改系统配置，使用用户级配置替代",
-		"network_listen":      "避免监听网络端口，使用出站连接替代",
+		"file_deletion":        "避免使用文件删除操作，或使用临时目录",
+		"system_modification":  "避免修改系统配置，使用用户级配置替代",
+		"network_listen":       "避免监听网络端口，使用出站连接替代",
 		"privilege_escalation": "避免提权操作，在脚本文档中说明所需权限",
-		"credential_exposure": "不要在代码中硬编码凭据，使用环境变量或配置文件",
-		"remote_code_exec":    "避免远程代码执行，使用白名单验证输入",
-		"infinite_loop":       "添加循环计数器或超时机制",
-		"resource_exhaustion": "添加资源使用限制和清理逻辑",
+		"credential_exposure":  "不要在代码中硬编码凭据，使用环境变量或配置文件",
+		"remote_code_exec":     "避免远程代码执行，使用白名单验证输入",
+		"infinite_loop":        "添加循环计数器或超时机制",
+		"resource_exhaustion":  "添加资源使用限制和清理逻辑",
 	}
 	return recommendations[pattern]
 }

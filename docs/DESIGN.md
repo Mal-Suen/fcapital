@@ -12,6 +12,7 @@
 
 | 版本 | 日期 | 变更内容 |
 |------|------|----------|
+| 3.0.0 | 2026-05-01 | 代码结构重构：引入服务层，统一类型定义，合并工具管理模块 |
 | 2.4.0 | 2026-04-25 | 重构 CLI 层：recon 完成后自动进入 AI 模式，扩展信息收集模块 |
 | 2.3.0 | 2026-04-25 | 重构工具调度设计：AI自由推荐最佳工具，添加工具检测和安装模块 |
 | 2.2.0 | 2026-04-24 | 修改工作流程：执行→AI分析→用户选择，添加交互式决策设计 |
@@ -2019,3 +2020,635 @@ fcapital config init
 | 1.0.0 | 2026-04-20 | - | 初始架构设计 |
 | 2.0.0 | 2026-04-22 | - | AI驱动架构升级 |
 | 2.1.0 | 2026-04-24 | - | 混合模式架构：新增ScriptGenerator组件、决策分发器、代码审计器、沙箱执行器 |
+| 3.0.0 | 2026-05-01 | - | 代码结构重构：引入服务层，统一类型定义，合并工具管理模块 |
+
+---
+
+## 11. 代码结构重构设计 (新增 v3.0.0)
+
+> **版本**: 3.0.0
+> **添加日期**: 2026-05-01
+
+### 11.1 重构后的整体架构
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              CLI Layer (CLI层)                               │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐   │
+│  │  root   │ │  recon  │ │   ai    │ │ script  │ │  deps   │ │ workflow │  │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘   │
+│                                                                              │
+│  职责：命令解析、参数验证、调用 Service 层                                    │
+│  限制：不包含业务逻辑，不直接调用 core/modules                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          Service Layer (服务层) - 新增                       │
+│  ┌───────────────────┐  ┌───────────────────┐  ┌───────────────────┐       │
+│  │   AIService       │  │  ReconService     │  │  SessionService   │       │
+│  │                   │  │                   │  │                   │       │
+│  │ - GetRecommend    │  │ - RunFullRecon    │  │ - CreateSession   │       │
+│  │ - ExecuteTask     │  │ - RunSubdomain    │  │ - GetSession      │       │
+│  │ - AnalyzeResults  │  │ - RunPortScan     │  │ - UpdateSession   │       │
+│  │ - RequestAltTool  │  │ - RunHTTPProbe    │  │ - SaveHistory     │       │
+│  └───────────────────┘  └───────────────────┘  └───────────────────┘       │
+│                                                                              │
+│  职责：业务逻辑封装、流程编排、状态管理                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Core Layer (核心层)                                │
+│  ┌───────────────────┐  ┌───────────────────┐  ┌───────────────────┐       │
+│  │   AIEngine        │  │  ContextManager   │  │  Dispatcher       │       │
+│  └───────────────────┘  └───────────────────┘  └───────────────────┘       │
+│                                                                              │
+│  ┌───────────────────┐  ┌───────────────────┐                               │
+│  │ ScriptGenerator   │  │   ToolManager     │  ← 合并 toolcheck 功能        │
+│  │                   │  │                   │                               │
+│  │                   │  │ - CheckTool()     │  原 toolcheck.CheckTool()     │
+│  │                   │  │ - CheckAll()      │  原 toolcheck.CheckAll()      │
+│  │                   │  │ - Install()       │  原 toolcheck.TryAutoInstall()│
+│  │                   │  │ - GetInfo()       │  原 toolcheck.GetToolInfo()   │
+│  └───────────────────┘  └───────────────────┘                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          Module Layer (模块层)                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    Scanner 接口 (统一抽象)                            │   │
+│  │  type Scanner interface {                                           │   │
+│  │      Name() string                                                  │   │
+│  │      Scan(ctx, target, opts) (Result, error)                        │   │
+│  │      IsAvailable() bool                                             │   │
+│  │  }                                                                  │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐              │
+│  │ Nmap    │ │ HTTPX   │ │ Nuclei  │ │ SQLMap  │ │ ...     │              │
+│  │ Runner  │ │ Runner  │ │ Runner  │ │ Runner  │ │         │              │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘              │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Pkg Layer (公共包)                                 │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐           │
+│  │   types     │ │   logger    │ │   errors    │ │  formatter  │           │
+│  │             │ │             │ │             │ │             │           │
+│  │ SessionState│ │ Logger      │ │ Error types │ │ 输出格式化  │           │
+│  │ PhaseResult │ │ PhaseLogger │ │ Wrap        │ │ 表格/JSON   │           │
+│  │ Recommend   │ │             │ │             │ │             │           │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘           │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 11.2 公共类型设计
+
+#### 11.2.1 pkg/types/session.go
+
+```go
+package types
+
+import "time"
+
+// SessionState 会话状态
+type SessionState struct {
+    ID           string        `json:"id"`
+    Target       string        `json:"target"`
+    CurrentPhase string        `json:"current_phase"`
+    Results      []PhaseResult `json:"results"`
+    History      []HistoryEntry `json:"history"`
+    StartTime    time.Time     `json:"start_time"`
+    LastUpdate   time.Time     `json:"last_update"`
+}
+
+// PhaseResult 阶段执行结果
+type PhaseResult struct {
+    PhaseID      string                 `json:"phase_id"`
+    PhaseName    string                 `json:"phase_name"`
+    Tool         string                 `json:"tool"`
+    Target       string                 `json:"target"`
+    StartTime    time.Time              `json:"start_time"`
+    EndTime      time.Time              `json:"end_time"`
+    Status       string                 `json:"status"` // success, failed, skipped
+    Output       string                 `json:"output,omitempty"`
+    Findings     map[string]interface{} `json:"findings,omitempty"`
+    Error        string                 `json:"error,omitempty"`
+}
+
+// HistoryEntry 历史记录条目
+type HistoryEntry struct {
+    Timestamp time.Time `json:"timestamp"`
+    Phase     string    `json:"phase"`
+    Action    string    `json:"action"`
+    Tool      string    `json:"tool,omitempty"`
+    Result    string    `json:"result"`
+}
+```
+
+#### 11.2.2 pkg/types/recommendation.go
+
+```go
+package types
+
+// Recommendation AI 推荐的操作
+type Recommendation struct {
+    ID          int      `json:"id"`
+    Title       string   `json:"title"`
+    Description string   `json:"description"`
+    Tool        string   `json:"tool,omitempty"`
+    ToolArgs    []string `json:"tool_args,omitempty"`
+    Script      string   `json:"script,omitempty"`
+    ScriptLang  string   `json:"script_lang,omitempty"`
+    Priority    int      `json:"priority"`     // 1-5, 5最高
+    RiskLevel   string   `json:"risk_level"`   // low, medium, high
+    Category    string   `json:"category"`     // recon, vulnscan, exploit, etc.
+    Reasoning   string   `json:"reasoning"`    // AI推荐理由
+}
+
+// RecommendationRequest AI推荐请求
+type RecommendationRequest struct {
+    Target         string                 `json:"target"`
+    CurrentPhase   string                 `json:"current_phase"`
+    Results        []PhaseResult          `json:"results"`
+    AvailableTools []ToolAvailability     `json:"available_tools"`
+    Context        map[string]interface{} `json:"context,omitempty"`
+}
+
+// ToolAvailability 工具可用性信息
+type ToolAvailability struct {
+    Name      string `json:"name"`
+    Installed bool   `json:"installed"`
+    Supported bool   `json:"supported"`
+    Version   string `json:"version,omitempty"`
+}
+```
+
+### 11.3 服务层设计
+
+#### 11.3.1 service/ai_service.go
+
+```go
+package service
+
+import (
+    "context"
+    "github.com/Mal-Suen/fcapital/internal/core/ai/providers"
+    "github.com/Mal-Suen/fcapital/internal/core/dispatcher"
+    "github.com/Mal-Suen/fcapital/internal/pkg/types"
+)
+
+// AIService AI服务
+type AIService struct {
+    provider   providers.Provider
+    dispatcher *dispatcher.Dispatcher
+    toolMgr    *toolmgr.ToolManager
+}
+
+// NewAIService 创建AI服务
+func NewAIService(provider providers.Provider, disp *dispatcher.Dispatcher, tm *toolmgr.ToolManager) *AIService {
+    return &AIService{
+        provider:   provider,
+        dispatcher: disp,
+        toolMgr:    tm,
+    }
+}
+
+// GetRecommendations 获取AI推荐
+func (s *AIService) GetRecommendations(ctx context.Context, req *types.RecommendationRequest) ([]types.Recommendation, error) {
+    // 1. 构建Prompt
+    prompt := s.buildRecommendationPrompt(req)
+    
+    // 2. 调用AI
+    resp, err := s.provider.Chat(ctx, &providers.ChatRequest{
+        Messages: []providers.Message{
+            {Role: "system", Content: PromptSystemRecommendation},
+            {Role: "user", Content: prompt},
+        },
+    })
+    if err != nil {
+        return nil, err
+    }
+    
+    // 3. 解析响应
+    recommendations := s.parseRecommendations(resp.Content)
+    
+    return recommendations, nil
+}
+
+// ExecuteTask 执行任务
+func (s *AIService) ExecuteTask(ctx context.Context, rec *types.Recommendation, target string) (*types.PhaseResult, error) {
+    // 1. 检查工具可用性
+    if rec.Tool != "" {
+        toolInfo := s.toolMgr.CheckTool(rec.Tool)
+        if !toolInfo.Supported {
+            return nil, fmt.Errorf("tool %s not supported on %s", rec.Tool, runtime.GOOS)
+        }
+        if !toolInfo.Installed {
+            // 尝试安装
+            if err := s.toolMgr.Install(rec.Tool); err != nil {
+                return nil, fmt.Errorf("failed to install %s: %w", rec.Tool, err)
+            }
+        }
+    }
+    
+    // 2. 执行
+    result, err := s.dispatcher.Execute(ctx, rec.Tool, target, rec.ToolArgs)
+    if err != nil {
+        return nil, err
+    }
+    
+    // 3. 转换结果
+    return &types.PhaseResult{
+        PhaseID:   generatePhaseID(),
+        PhaseName: rec.Title,
+        Tool:      rec.Tool,
+        Target:    target,
+        StartTime: result.StartTime,
+        EndTime:   result.EndTime,
+        Status:    "success",
+        Output:    result.Output,
+        Findings:  result.Findings,
+    }, nil
+}
+
+// RequestAlternativeTool 请求替代工具
+func (s *AIService) RequestAlternativeTool(ctx context.Context, originalTool, failureReason string, availableTools []types.ToolAvailability) (*types.Recommendation, error) {
+    prompt := fmt.Sprintf(PromptAlternativeTool, originalTool, failureReason, availableTools)
+    
+    resp, err := s.provider.Chat(ctx, &providers.ChatRequest{
+        Messages: []providers.Message{
+            {Role: "system", Content: PromptSystemAlternative},
+            {Role: "user", Content: prompt},
+        },
+    })
+    if err != nil {
+        return nil, err
+    }
+    
+    return s.parseSingleRecommendation(resp.Content), nil
+}
+```
+
+#### 11.3.2 service/recon_service.go
+
+```go
+package service
+
+import (
+    "context"
+    "github.com/Mal-Suen/fcapital/internal/modules/recon"
+    "github.com/Mal-Suen/fcapital/internal/modules/portscan"
+    "github.com/Mal-Suen/fcapital/internal/modules/subdomain"
+    "github.com/Mal-Suen/fcapital/internal/pkg/types"
+)
+
+// ReconService 信息收集服务
+type ReconService struct {
+    toolMgr *toolmgr.ToolManager
+}
+
+// ReconResult 信息收集结果
+type ReconResult struct {
+    Target       string                   `json:"target"`
+    Subdomains   []string                 `json:"subdomains"`
+    HTTPResults  []recon.HTTPXResult      `json:"http_results"`
+    Ports        []portscan.NmapResult    `json:"ports"`
+    DNSRecords   []recon.DNSXResult       `json:"dns_records"`
+    WAF          *recon.WAFResult         `json:"waf,omitempty"`
+    Technologies []TechInfo               `json:"technologies"`
+    SSLInfo      *SSLInfo                 `json:"ssl,omitempty"`
+}
+
+// RunFullRecon 执行完整信息收集
+func (s *ReconService) RunFullRecon(ctx context.Context, target string, depth string) (*ReconResult, error) {
+    result := &ReconResult{Target: target}
+    
+    // 并行执行各模块
+    g, ctx := errgroup.WithContext(ctx)
+    
+    // 子域名枚举
+    g.Go(func() error {
+        runner, _ := subdomain.NewSubfinderRunner(s.toolMgr)
+        subdomains, err := runner.Run(ctx, target)
+        if err == nil {
+            result.Subdomains = subdomains
+        }
+        return nil // 子域名失败不影响其他
+    })
+    
+    // HTTP探测
+    g.Go(func() error {
+        runner, _ := recon.NewHTTPXRunner(s.toolMgr)
+        httpResults, err := runner.Run(ctx, target)
+        if err == nil {
+            result.HTTPResults = httpResults
+        }
+        return nil
+    })
+    
+    // 端口扫描
+    g.Go(func() error {
+        runner, _ := portscan.NewNmapRunner(s.toolMgr)
+        ports, err := runner.Scan(ctx, target, portscan.QuickScanOpts())
+        if err == nil {
+            result.Ports = ports
+        }
+        return nil
+    })
+    
+    // 等待所有任务完成
+    g.Wait()
+    
+    return result, nil
+}
+```
+
+### 11.4 统一工具管理设计
+
+#### 11.4.1 core/toolmgr/checker.go (合并 toolcheck)
+
+```go
+package toolmgr
+
+import (
+    "os/exec"
+    "runtime"
+    "strings"
+)
+
+// ToolInfo 工具信息
+type ToolInfo struct {
+    Name      string `json:"name"`
+    Installed bool   `json:"installed"`
+    Supported bool   `json:"supported"`
+    Version   string `json:"version,omitempty"`
+    Path      string `json:"path,omitempty"`
+    Category  string `json:"category,omitempty"`
+}
+
+// CheckResult 检查结果
+type CheckResult struct {
+    Tools    []ToolInfo `json:"tools"`
+    Summary  Summary    `json:"summary"`
+}
+
+// Summary 汇总信息
+type Summary struct {
+    Total      int `json:"total"`
+    Installed  int `json:"installed"`
+    Missing    int `json:"missing"`
+    Unsupported int `json:"unsupported"`
+}
+
+// CheckTool 检查单个工具
+func (tm *ToolManager) CheckTool(name string) *ToolInfo {
+    info := &ToolInfo{Name: name}
+    
+    // 检查是否支持当前系统
+    info.Supported = tm.isToolSupported(name)
+    if !info.Supported {
+        return info
+    }
+    
+    // 检查是否已安装
+    path, err := exec.LookPath(name)
+    if err == nil {
+        info.Installed = true
+        info.Path = path
+        info.Version = tm.getToolVersion(name)
+    }
+    
+    return info
+}
+
+// CheckAll 检查所有工具
+func (tm *ToolManager) CheckAll() *CheckResult {
+    result := &CheckResult{}
+    
+    for _, tool := range tm.tools {
+        info := tm.CheckTool(tool.Name)
+        result.Tools = append(result.Tools, *info)
+        
+        result.Summary.Total++
+        if info.Installed {
+            result.Summary.Installed++
+        } else if !info.Supported {
+            result.Summary.Unsupported++
+        } else {
+            result.Summary.Missing++
+        }
+    }
+    
+    return result
+}
+
+// isToolSupported 检查工具是否支持当前系统
+func (tm *ToolManager) isToolSupported(name string) bool {
+    unsupported := map[string][]string{
+        "windows": {"wpscan", "hydra", "nikto"},
+        "darwin":  {},
+        "linux":   {},
+    }
+    
+    os := runtime.GOOS
+    for _, tool := range unsupported[os] {
+        if tool == name {
+            return false
+        }
+    }
+    return true
+}
+
+// Install 安装工具
+func (tm *ToolManager) Install(name string) error {
+    // 根据工具类型选择安装方式
+    switch tm.getToolType(name) {
+    case "go":
+        return tm.installGoTool(name)
+    case "python":
+        return tm.installPythonTool(name)
+    case "ruby":
+        return tm.installRubyTool(name)
+    case "system":
+        return tm.installSystemTool(name)
+    default:
+        return fmt.Errorf("unknown tool type: %s", name)
+    }
+}
+```
+
+### 11.5 模块接口设计
+
+#### 11.5.1 modules/interface.go
+
+```go
+package modules
+
+import "context"
+
+// Scanner 统一扫描接口
+type Scanner interface {
+    // Name 返回扫描器名称
+    Name() string
+    
+    // Scan 执行扫描
+    Scan(ctx context.Context, target string, opts ScanOptions) (ScanResult, error)
+    
+    // IsAvailable 检查工具是否可用
+    IsAvailable() bool
+    
+    // Category 返回工具类别
+    Category() string
+}
+
+// ScanOptions 扫描选项接口
+type ScanOptions interface {
+    Validate() error
+}
+
+// ScanResult 扫描结果接口
+type ScanResult interface {
+    ToJSON() ([]byte, error)
+    Summary() string
+}
+
+// BaseScanOptions 基础扫描选项
+type BaseScanOptions struct {
+    Timeout     time.Duration `json:"timeout"`
+    Threads     int           `json:"threads"`
+    OutputFile  string        `json:"output_file,omitempty"`
+}
+
+func (o *BaseScanOptions) Validate() error {
+    if o.Timeout < 0 {
+        return errors.New("timeout must be positive")
+    }
+    if o.Threads < 1 {
+        o.Threads = 10 // 默认线程数
+    }
+    return nil
+}
+```
+
+#### 11.5.2 模块实现示例
+
+```go
+// modules/portscan/nmap.go
+
+package portscan
+
+import (
+    "context"
+    "github.com/Mal-Suen/fcapital/internal/modules"
+)
+
+// NmapRunner Nmap扫描器
+type NmapRunner struct {
+    toolMgr *toolmgr.ToolManager
+}
+
+// 确保 NmapRunner 实现 Scanner 接口
+var _ modules.Scanner = (*NmapRunner)(nil)
+
+func (r *NmapRunner) Name() string {
+    return "nmap"
+}
+
+func (r *NmapRunner) Category() string {
+    return "portscan"
+}
+
+func (r *NmapRunner) IsAvailable() bool {
+    return r.toolMgr.CheckTool("nmap").Installed
+}
+
+func (r *NmapRunner) Scan(ctx context.Context, target string, opts modules.ScanOptions) (modules.ScanResult, error) {
+    nmapOpts, ok := opts.(*NmapOptions)
+    if !ok {
+        nmapOpts = DefaultNmapOptions()
+    }
+    
+    if err := nmapOpts.Validate(); err != nil {
+        return nil, err
+    }
+    
+    // 执行扫描...
+    result := &NmapResult{
+        Target: target,
+        Ports:  ports,
+    }
+    
+    return result, nil
+}
+
+// NmapResult 实现 ScanResult 接口
+func (r *NmapResult) ToJSON() ([]byte, error) {
+    return json.Marshal(r)
+}
+
+func (r *NmapResult) Summary() string {
+    return fmt.Sprintf("Found %d open ports on %s", len(r.Ports), r.Target)
+}
+```
+
+### 11.6 重构实施计划
+
+#### 阶段一：公共类型统一 (1-2天)
+
+| 任务 | 文件 | 状态 |
+|------|------|------|
+| 创建 types 包 | `pkg/types/session.go` | 待开始 |
+| 创建 types 包 | `pkg/types/recommendation.go` | 待开始 |
+| 更新 ai_cmd.go 引用 | `cli/ai_cmd.go` | 待开始 |
+| 更新 recon_all.go 引用 | `cli/recon_all.go` | 待开始 |
+| 更新 logger 引用 | `pkg/logger/logger.go` | 待开始 |
+
+#### 阶段二：服务层引入 (2-3天)
+
+| 任务 | 文件 | 状态 |
+|------|------|------|
+| 创建 AIService | `service/ai_service.go` | 待开始 |
+| 创建 ReconService | `service/recon_service.go` | 待开始 |
+| 创建 SessionService | `service/session_service.go` | 待开始 |
+| 重构 ai_cmd.go | `cli/ai_cmd.go` | 待开始 |
+| 重构 recon_all.go | `cli/recon_all.go` | 待开始 |
+
+#### 阶段三：工具管理统一 (1-2天)
+
+| 任务 | 文件 | 状态 |
+|------|------|------|
+| 添加 checker.go | `core/toolmgr/checker.go` | 待开始 |
+| 添加 installer.go | `core/toolmgr/installer.go` | 待开始 |
+| 迁移 toolcheck 功能 | `core/toolmgr/` | 待开始 |
+| 更新所有调用处 | 多个文件 | 待开始 |
+| 删除 toolcheck 包 | `pkg/toolcheck/` | 待开始 |
+
+#### 阶段四：模块接口抽象 (1天)
+
+| 任务 | 文件 | 状态 |
+|------|------|------|
+| 定义 Scanner 接口 | `modules/interface.go` | 待开始 |
+| 更新 NmapRunner | `modules/portscan/nmap.go` | 待开始 |
+| 更新 HTTPXRunner | `modules/recon/httpx.go` | 待开始 |
+| 更新其他 Runner | 多个文件 | 待开始 |
+
+#### 阶段五：验证和测试 (1天)
+
+| 任务 | 描述 |
+|------|------|
+| 编译验证 | 确保所有代码编译通过 |
+| 功能测试 | 确保所有功能正常工作 |
+| 回归测试 | 确保没有引入新bug |
+
+### 11.7 重构风险和缓解措施
+
+| 风险 | 影响 | 缓解措施 |
+|------|------|----------|
+| 大规模修改导致功能回归 | 高 | 分阶段实施，每阶段完成后进行测试 |
+| 循环依赖 | 中 | 仔细规划依赖方向，使用接口解耦 |
+| 性能影响 | 低 | 保持核心逻辑不变，仅调整结构 |
+| 文档不同步 | 低 | 同步更新需求和设计文档 |

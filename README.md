@@ -8,6 +8,9 @@
 [![ProjectDiscovery](https://img.shields.io/badge/ProjectDiscovery-Integrated-orange.svg)](https://github.com/projectdiscovery)
 [![AI-Powered](https://img.shields.io/badge/AI-Powered-green.svg)]()
 [![Cross-Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-2.4.0-blue.svg)]()
+
+> **当前版本**: v2.4.0 (功能完成) | **下一版本**: v3.0.0 (代码重构规划中)
 
 ---
 
@@ -329,6 +332,26 @@ fcapital/
 ├── build/                     # 编译产物
 └── README.md
 ```
+
+---
+
+## 🗺️ Roadmap / 路线图
+
+### v2.4.0 (Current / 当前版本)
+- ✅ AI-driven penetration testing workflow
+- ✅ Automatic tool detection and installation
+- ✅ Multi-provider AI support (OpenAI, DeepSeek, Ollama)
+- ✅ Script generation for non-standard scenarios
+- ✅ Interactive decision-making interface
+
+### v3.0.0 (Planned / 计划中)
+- 📋 Service layer introduction
+- 📋 Unified type definitions (`pkg/types`)
+- 📋 Merge `toolmgr` and `toolcheck` modules
+- 📋 Unified `Scanner` interface for modules
+- 📋 Configuration externalization
+
+See [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) and [docs/DESIGN.md](docs/DESIGN.md) for details.
 
 ---
 

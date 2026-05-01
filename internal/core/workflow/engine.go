@@ -72,14 +72,14 @@ type WorkflowResult struct {
 
 // ScanSummary 扫描摘要
 type ScanSummary struct {
-	Subdomains      int            `json:"subdomains"`
-	AliveHosts      int            `json:"alive_hosts"`
-	OpenPorts       int            `json:"open_ports"`
-	Directories     int            `json:"directories"`
-	Vulnerabilities int            `json:"vulnerabilities"`
-	Technologies    []string       `json:"technologies"`
-	Services        []ServiceInfo  `json:"services"`
-	CriticalVulns   []VulnInfo     `json:"critical_vulns"`
+	Subdomains      int           `json:"subdomains"`
+	AliveHosts      int           `json:"alive_hosts"`
+	OpenPorts       int           `json:"open_ports"`
+	Directories     int           `json:"directories"`
+	Vulnerabilities int           `json:"vulnerabilities"`
+	Technologies    []string      `json:"technologies"`
+	Services        []ServiceInfo `json:"services"`
+	CriticalVulns   []VulnInfo    `json:"critical_vulns"`
 }
 
 // ServiceInfo 服务信息
@@ -347,25 +347,25 @@ func (e *Engine) registerBuiltinWorkflows() {
 				SkipOnError: true,
 			},
 			{
-				ID:         "dir_scan",
-				Name:       "目录扫描",
-				Module:     "webscan",
-				Action:     "dir",
-				InputFrom:  "http_probe",
-				InputField: "urls",
-				Timeout:    10 * time.Minute,
-				DependsOn:  []string{"http_probe"},
+				ID:          "dir_scan",
+				Name:        "目录扫描",
+				Module:      "webscan",
+				Action:      "dir",
+				InputFrom:   "http_probe",
+				InputField:  "urls",
+				Timeout:     10 * time.Minute,
+				DependsOn:   []string{"http_probe"},
 				SkipOnError: true,
 			},
 			{
-				ID:         "vuln_scan",
-				Name:       "漏洞扫描",
-				Module:     "vulnscan",
-				Action:     "nuclei",
-				InputFrom:  "http_probe",
-				InputField: "urls",
-				Timeout:    15 * time.Minute,
-				DependsOn:  []string{"http_probe"},
+				ID:          "vuln_scan",
+				Name:        "漏洞扫描",
+				Module:      "vulnscan",
+				Action:      "nuclei",
+				InputFrom:   "http_probe",
+				InputField:  "urls",
+				Timeout:     15 * time.Minute,
+				DependsOn:   []string{"http_probe"},
 				SkipOnError: true,
 			},
 		},
@@ -412,25 +412,25 @@ func (e *Engine) registerBuiltinWorkflows() {
 				Timeout: 2 * time.Minute,
 			},
 			{
-				ID:         "dir_scan",
-				Name:       "目录扫描",
-				Module:     "webscan",
-				Action:     "dir",
-				InputFrom:  "http_probe",
-				InputField: "urls",
-				Timeout:    10 * time.Minute,
-				DependsOn:  []string{"http_probe"},
+				ID:          "dir_scan",
+				Name:        "目录扫描",
+				Module:      "webscan",
+				Action:      "dir",
+				InputFrom:   "http_probe",
+				InputField:  "urls",
+				Timeout:     10 * time.Minute,
+				DependsOn:   []string{"http_probe"},
 				SkipOnError: true,
 			},
 			{
-				ID:         "vuln_scan",
-				Name:       "漏洞扫描",
-				Module:     "vulnscan",
-				Action:     "nuclei",
-				InputFrom:  "http_probe",
-				InputField: "urls",
-				Timeout:    15 * time.Minute,
-				DependsOn:  []string{"http_probe"},
+				ID:          "vuln_scan",
+				Name:        "漏洞扫描",
+				Module:      "vulnscan",
+				Action:      "nuclei",
+				InputFrom:   "http_probe",
+				InputField:  "urls",
+				Timeout:     15 * time.Minute,
+				DependsOn:   []string{"http_probe"},
 				SkipOnError: true,
 			},
 		},
@@ -450,14 +450,14 @@ func (e *Engine) registerBuiltinWorkflows() {
 				Timeout: 2 * time.Minute,
 			},
 			{
-				ID:         "vuln_scan",
-				Name:       "漏洞扫描",
-				Module:     "vulnscan",
-				Action:     "nuclei",
-				InputFrom:  "http_probe",
-				InputField: "urls",
-				Timeout:    20 * time.Minute,
-				DependsOn:  []string{"http_probe"},
+				ID:          "vuln_scan",
+				Name:        "漏洞扫描",
+				Module:      "vulnscan",
+				Action:      "nuclei",
+				InputFrom:   "http_probe",
+				InputField:  "urls",
+				Timeout:     20 * time.Minute,
+				DependsOn:   []string{"http_probe"},
 				SkipOnError: true,
 			},
 		},

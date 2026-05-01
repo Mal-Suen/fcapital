@@ -25,12 +25,12 @@ var scriptCmd = &cobra.Command{
 }
 
 var (
-	scriptLanguage    string
-	scriptExecute     bool
-	scriptOutput      string
-	scriptProvider    string
-	scriptModel       string
-	scriptTarget      string
+	scriptLanguage string
+	scriptExecute  bool
+	scriptOutput   string
+	scriptProvider string
+	scriptModel    string
+	scriptTarget   string
 )
 
 func init() {

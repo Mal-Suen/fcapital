@@ -51,29 +51,29 @@ type WAFDetection struct {
 
 // TechInfo 技术栈信息
 type TechInfo struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
+	Name     string `json:"name"`
+	Version  string `json:"version"`
 	Category string `json:"category"`
 }
 
 // SSLInfo SSL/TLS 信息
 type SSLInfo struct {
-	Issuer      string `json:"issuer"`
-	Subject     string `json:"subject"`
-	ValidFrom   string `json:"valid_from"`
-	ValidTo     string `json:"valid_to"`
-	Cipher      string `json:"cipher"`
-	Protocol    string `json:"protocol"`
-	SelfSigned  bool   `json:"self_signed"`
+	Issuer     string `json:"issuer"`
+	Subject    string `json:"subject"`
+	ValidFrom  string `json:"valid_from"`
+	ValidTo    string `json:"valid_to"`
+	Cipher     string `json:"cipher"`
+	Protocol   string `json:"protocol"`
+	SelfSigned bool   `json:"self_signed"`
 }
 
 // CMSInfo CMS 信息
 type CMSInfo struct {
-	Name       string   `json:"name"`
-	Version    string   `json:"version"`
-	Plugins    []string `json:"plugins"`
-	Themes     []string `json:"themes"`
-	User       string   `json:"user"`
+	Name    string   `json:"name"`
+	Version string   `json:"version"`
+	Plugins []string `json:"plugins"`
+	Themes  []string `json:"themes"`
+	User    string   `json:"user"`
 }
 
 // reconCmd 信息收集命令
@@ -104,9 +104,9 @@ var reconCmd = &cobra.Command{
 
 var (
 	reconTarget      string
-	reconDepth       string  // quick, normal, full
-	reconNoAI        bool    // 不进入 AI 模式
-	reconVulnScan    bool    // 启用漏洞扫描
+	reconDepth       string // quick, normal, full
+	reconNoAI        bool   // 不进入 AI 模式
+	reconVulnScan    bool   // 启用漏洞扫描
 	reconProvider    string
 	reconModel       string
 	reconAutoConfirm bool
@@ -530,7 +530,7 @@ func startAIPenetration(ctx context.Context, reconResult *ReconResult, tm *toolm
 	fmt.Printf("\n▶️  自动执行: %s (优先级 %d)\n", selected.Title, selected.Priority)
 
 	// 执行选中的任务
-	executeNextPhase(ctx, provider, disp, gen, selected, reconResult.Target, session, log, toolChecker, tm)
+	executeNextPhase(ctx, provider, disp, gen, selected, reconResult.Target, session, log, toolChecker, tm, 0)
 
 	// 继续交互式循环
 	runInteractiveLoop(ctx, provider, disp, gen, session, log, toolChecker, tm)
@@ -611,14 +611,7 @@ func getAIRecommendationsWithRecon(ctx context.Context, provider providers.Provi
 }
 
 // requestAIAlternative 请求 AI 重新推荐替代工具
-func requestAIAlternative(ctx context.Context, provider providers.Provider, session *SessionState, failedRec Recommendation, failureReason string, toolChecker *toolcheck.Checker) *Recommendation {
-	// 获取已安装工具列表
-	var availableTools []string
-	checkResult := toolChecker.CheckAll()
-	for _, tool := range checkResult.Available {
-		availableTools = append(availableTools, tool.Name)
-	}
-
+func requestAIAlternative(ctx context.Context, provider providers.Provider, session *SessionState, failedRec Recommendation, failureReason string, availableTools []string) *Recommendation {
 	prompt := fmt.Sprintf(`之前推荐的工具无法使用，请重新推荐一个替代方案。
 
 原推荐:
@@ -656,6 +649,7 @@ null
 		},
 	})
 	if err != nil {
+		fmt.Printf("AI 请求失败: %v\n", err)
 		return nil
 	}
 
@@ -681,28 +675,47 @@ null
 	return &rec
 }
 
-func executeNextPhase(ctx context.Context, provider providers.Provider, disp *dispatcher.Dispatcher, gen *script.Generator, rec Recommendation, target string, session *SessionState, log *logger.Logger, toolChecker *toolcheck.Checker, tm *toolmgr.ToolManager) Recommendation {
+// maxRetries 最大重试次数
+const maxRetries = 3
+
+func executeNextPhase(ctx context.Context, provider providers.Provider, disp *dispatcher.Dispatcher, gen *script.Generator, rec Recommendation, target string, session *SessionState, log *logger.Logger, toolChecker *toolcheck.Checker, tm *toolmgr.ToolManager, retryCount int) Recommendation {
 	fmt.Printf("\n🎯 执行: %s\n", rec.Title)
 
-	// 1. 检查工具是否已安装
+	// 检查重试次数
+	if retryCount > maxRetries {
+		fmt.Printf("❌ 已达到最大重试次数 (%d)，跳过此操作\n", maxRetries)
+		return rec
+	}
+
+	// 1. 检查工具是否已安装和支持
 	toolInfo := toolChecker.CheckTool(rec.Tool)
+
+	// 2. 先检查是否支持当前系统
+	if !toolInfo.Supported {
+		fmt.Printf("❌ %s 不支持 %s 系统\n", rec.Tool, runtime.GOOS)
+
+		// 获取已安装工具列表
+		checkResult := toolChecker.CheckAll()
+		var availableTools []string
+		for _, tool := range checkResult.Available {
+			availableTools = append(availableTools, tool.Name)
+		}
+
+		// 3. 告诉 AI 重新推荐
+		newRec := requestAIAlternative(ctx, provider, session, rec, fmt.Sprintf("%s 不支持 %s 系统", rec.Tool, runtime.GOOS), availableTools)
+		if newRec != nil {
+			fmt.Printf("\n🔄 AI 重新推荐: %s (工具: %s)\n", newRec.Title, newRec.Tool)
+			return executeNextPhase(ctx, provider, disp, gen, *newRec, target, session, log, toolChecker, tm, retryCount+1)
+		}
+		fmt.Printf("❌ AI 无法提供替代方案\n")
+		return rec
+	}
+
+	// 4. 检查是否已安装
 	if !toolInfo.Installed {
 		fmt.Printf("⚠️  工具 %s 未安装\n", rec.Tool)
 
-		// 2. 检查工具是否支持当前系统
-		if !toolInfo.Supported {
-			fmt.Printf("❌ %s 不支持 %s 系统\n", rec.Tool, runtime.GOOS)
-
-			// 3. 告诉 AI 重新推荐
-			newRec := requestAIAlternative(ctx, provider, session, rec, fmt.Sprintf("%s 不支持 %s 系统", rec.Tool, runtime.GOOS), toolChecker)
-			if newRec != nil {
-				fmt.Printf("\n🔄 AI 重新推荐: %s (工具: %s)\n", newRec.Title, newRec.Tool)
-				return executeNextPhase(ctx, provider, disp, gen, *newRec, target, session, log, toolChecker, tm)
-			}
-			return rec
-		}
-
-		// 4. 尝试自动安装
+		// 5. 尝试自动安装
 		fmt.Printf("🔄 正在安装 %s...\n", rec.Tool)
 		success, message := toolcheck.TryAutoInstall(rec.Tool)
 		if success {
@@ -710,12 +723,20 @@ func executeNextPhase(ctx context.Context, provider providers.Provider, disp *di
 		} else {
 			fmt.Printf("❌ %s\n", message)
 
-			// 5. 安装失败，告诉 AI 重新推荐
-			newRec := requestAIAlternative(ctx, provider, session, rec, message, toolChecker)
+			// 获取已安装工具列表
+			checkResult := toolChecker.CheckAll()
+			var availableTools []string
+			for _, tool := range checkResult.Available {
+				availableTools = append(availableTools, tool.Name)
+			}
+
+			// 6. 安装失败，告诉 AI 重新推荐
+			newRec := requestAIAlternative(ctx, provider, session, rec, message, availableTools)
 			if newRec != nil {
 				fmt.Printf("\n🔄 AI 重新推荐: %s (工具: %s)\n", newRec.Title, newRec.Tool)
-				return executeNextPhase(ctx, provider, disp, gen, *newRec, target, session, log, toolChecker, tm)
+				return executeNextPhase(ctx, provider, disp, gen, *newRec, target, session, log, toolChecker, tm, retryCount+1)
 			}
+			fmt.Printf("❌ AI 无法提供替代方案\n")
 			return rec
 		}
 	}
@@ -820,7 +841,7 @@ func runInteractiveLoop(ctx context.Context, provider providers.Provider, disp *
 		}
 
 		selected := recommendations[choice-1]
-		executeNextPhase(ctx, provider, disp, gen, selected, session.Target, session, log, toolChecker, tm)
+		executeNextPhase(ctx, provider, disp, gen, selected, session.Target, session, log, toolChecker, tm, 0)
 	}
 }
 

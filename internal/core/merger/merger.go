@@ -20,15 +20,15 @@ const (
 
 // SourceResult represents a result from a single source.
 type SourceResult struct {
-	Type       ResultType          `json:"type"`
-	Source     string              `json:"source"`
-	Success    bool                `json:"success"`
-	Output     string              `json:"output"`
-	Error      string              `json:"error,omitempty"`
-	Metadata   map[string]string   `json:"metadata,omitempty"`
-	Timestamp  time.Time           `json:"timestamp"`
-	Duration   time.Duration       `json:"duration"`
-	Findings   []Finding           `json:"findings,omitempty"`
+	Type      ResultType        `json:"type"`
+	Source    string            `json:"source"`
+	Success   bool              `json:"success"`
+	Output    string            `json:"output"`
+	Error     string            `json:"error,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+	Timestamp time.Time         `json:"timestamp"`
+	Duration  time.Duration     `json:"duration"`
+	Findings  []Finding         `json:"findings,omitempty"`
 }
 
 // Finding represents a security finding.
@@ -44,22 +44,22 @@ type Finding struct {
 
 // MergedResult represents a merged result from multiple sources.
 type MergedResult struct {
-	Success        bool              `json:"success"`
-	Summary        string            `json:"summary"`
-	AllFindings    []Finding         `json:"all_findings"`
-	UniqueFindings []Finding         `json:"unique_findings"`
+	Success        bool               `json:"success"`
+	Summary        string             `json:"summary"`
+	AllFindings    []Finding          `json:"all_findings"`
+	UniqueFindings []Finding          `json:"unique_findings"`
 	Duplicates     []DuplicateFinding `json:"duplicates,omitempty"`
-	Statistics     Statistics        `json:"statistics"`
-	Sources        []string          `json:"sources"`
-	Timestamp      time.Time         `json:"timestamp"`
-	TotalDuration  time.Duration     `json:"total_duration"`
-	RawOutputs     map[string]string `json:"raw_outputs,omitempty"`
+	Statistics     Statistics         `json:"statistics"`
+	Sources        []string           `json:"sources"`
+	Timestamp      time.Time          `json:"timestamp"`
+	TotalDuration  time.Duration      `json:"total_duration"`
+	RawOutputs     map[string]string  `json:"raw_outputs,omitempty"`
 }
 
 // DuplicateFinding represents a duplicate finding.
 type DuplicateFinding struct {
-	Finding  Finding   `json:"finding"`
-	Sources  []string  `json:"sources"`
+	Finding Finding  `json:"finding"`
+	Sources []string `json:"sources"`
 }
 
 // Statistics represents execution statistics.
@@ -402,7 +402,7 @@ func (n *AINormalizer) Normalize(output string) ([]Finding, error) {
 
 	// Try to parse as JSON
 	var jsonData struct {
-		Findings []Finding `json:"findings"`
+		Findings        []Finding `json:"findings"`
 		Vulnerabilities []Finding `json:"vulnerabilities"`
 	}
 	if err := json.Unmarshal([]byte(output), &jsonData); err == nil {

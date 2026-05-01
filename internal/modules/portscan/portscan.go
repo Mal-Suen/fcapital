@@ -12,28 +12,28 @@ import (
 
 // NmapResult nmap 扫描结果
 type NmapResult struct {
-	Host       string        `json:"host"`
-	Ports      []PortInfo    `json:"ports"`
-	Vulns      []VulnInfo    `json:"vulns,omitempty"`
-	ScanTime   time.Duration `json:"scan_time"`
-	Command    string        `json:"command"`
-	RawOutput  string        `json:"raw_output,omitempty"`
+	Host      string        `json:"host"`
+	Ports     []PortInfo    `json:"ports"`
+	Vulns     []VulnInfo    `json:"vulns,omitempty"`
+	ScanTime  time.Duration `json:"scan_time"`
+	Command   string        `json:"command"`
+	RawOutput string        `json:"raw_output,omitempty"`
 }
 
 // PortInfo 端口信息
 type PortInfo struct {
-	Port     int    `json:"port"`
-	Protocol string `json:"protocol"`
-	State    string `json:"state"`
-	Service  string `json:"service"`
-	Version  string `json:"version,omitempty"`
+	Port     int            `json:"port"`
+	Protocol string         `json:"protocol"`
+	State    string         `json:"state"`
+	Service  string         `json:"service"`
+	Version  string         `json:"version,omitempty"`
 	Scripts  []ScriptResult `json:"scripts,omitempty"`
 }
 
 // ScriptResult NSE 脚本结果
 type ScriptResult struct {
-	ID      string `json:"id"`
-	Output  string `json:"output"`
+	ID     string `json:"id"`
+	Output string `json:"output"`
 }
 
 // VulnInfo 漏洞信息

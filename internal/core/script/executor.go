@@ -22,30 +22,30 @@ type Executor struct {
 
 // Restrictions defines execution restrictions.
 type Restrictions struct {
-	NoNetwork     bool
-	NoFileWrite   bool
-	NoFileRead    bool
-	NoSubprocess  bool
-	MaxMemory     int64 // in bytes
-	MaxCPUTime    time.Duration
+	NoNetwork    bool
+	NoFileWrite  bool
+	NoFileRead   bool
+	NoSubprocess bool
+	MaxMemory    int64 // in bytes
+	MaxCPUTime   time.Duration
 }
 
 // ExecutionResult represents the result of script execution.
 type ExecutionResult struct {
-	Success   bool     `json:"success"`
-	Output    string   `json:"output"`
-	Error     string   `json:"error,omitempty"`
+	Success   bool          `json:"success"`
+	Output    string        `json:"output"`
+	Error     string        `json:"error,omitempty"`
 	Duration  time.Duration `json:"duration"`
-	ExitCode  int      `json:"exit_code"`
-	Artifacts []string `json:"artifacts,omitempty"`
+	ExitCode  int           `json:"exit_code"`
+	Artifacts []string      `json:"artifacts,omitempty"`
 }
 
 // SandboxResult represents the result of sandbox execution.
 type SandboxResult struct {
-	Success  bool     `json:"success"`
-	Output   string   `json:"output"`
-	Error    error    `json:"error,omitempty"`
-	Warnings []string `json:"warnings,omitempty"`
+	Success  bool          `json:"success"`
+	Output   string        `json:"output"`
+	Error    error         `json:"error,omitempty"`
+	Warnings []string      `json:"warnings,omitempty"`
 	Duration time.Duration `json:"duration"`
 }
 

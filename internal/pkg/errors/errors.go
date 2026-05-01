@@ -22,14 +22,14 @@ func (e *AppError) Unwrap() error {
 
 // 预定义错误代码
 const (
-	CodeToolNotFound   = "TOOL_NOT_FOUND"
-	CodeToolNotReady   = "TOOL_NOT_READY"
-	CodeToolInstall    = "TOOL_INSTALL_FAILED"
-	CodeScanFailed     = "SCAN_FAILED"
-	CodeInvalidInput   = "INVALID_INPUT"
-	CodeConfigError    = "CONFIG_ERROR"
-	CodeWorkflowError  = "WORKFLOW_ERROR"
-	CodeTimeout        = "TIMEOUT"
+	CodeToolNotFound  = "TOOL_NOT_FOUND"
+	CodeToolNotReady  = "TOOL_NOT_READY"
+	CodeToolInstall   = "TOOL_INSTALL_FAILED"
+	CodeScanFailed    = "SCAN_FAILED"
+	CodeInvalidInput  = "INVALID_INPUT"
+	CodeConfigError   = "CONFIG_ERROR"
+	CodeWorkflowError = "WORKFLOW_ERROR"
+	CodeTimeout       = "TIMEOUT"
 )
 
 // NewError 创建应用错误

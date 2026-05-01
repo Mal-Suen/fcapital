@@ -85,7 +85,7 @@ func WithToolManager(tm *toolmgr.ToolManager) DispatcherOption {
 // NewDispatcher creates a new dispatcher.
 func NewDispatcher(opts ...DispatcherOption) *Dispatcher {
 	d := &Dispatcher{
-		rules:       defaultScenarioRules,
+		rules:        defaultScenarioRules,
 		capabilities: defaultCapabilityMapping,
 	}
 
@@ -418,25 +418,25 @@ type ExecutionResult struct {
 // Default scenario rules
 var defaultScenarioRules = map[string]ScenarioType{
 	// Standard tasks (have mature tools)
-	"port scan":        ScenarioStandard,
-	"port_scan":        ScenarioStandard,
-	"subdomain":        ScenarioStandard,
-	"subfinder":        ScenarioStandard,
-	"directory":        ScenarioStandard,
-	"vulnerability":    ScenarioStandard,
-	"sql injection":    ScenarioStandard,
-	"sqlmap":           ScenarioStandard,
-	"wordpress":        ScenarioStandard,
-	"wpscan":           ScenarioStandard,
-	"nuclei":           ScenarioStandard,
-	"nmap":             ScenarioStandard,
-	"gobuster":         ScenarioStandard,
-	"ffuf":             ScenarioStandard,
-	"httpx":            ScenarioStandard,
-	"dirsearch":        ScenarioStandard,
-	"nikto":            ScenarioStandard,
-	"sslscan":          ScenarioStandard,
-	"whatweb":          ScenarioStandard,
+	"port scan":     ScenarioStandard,
+	"port_scan":     ScenarioStandard,
+	"subdomain":     ScenarioStandard,
+	"subfinder":     ScenarioStandard,
+	"directory":     ScenarioStandard,
+	"vulnerability": ScenarioStandard,
+	"sql injection": ScenarioStandard,
+	"sqlmap":        ScenarioStandard,
+	"wordpress":     ScenarioStandard,
+	"wpscan":        ScenarioStandard,
+	"nuclei":        ScenarioStandard,
+	"nmap":          ScenarioStandard,
+	"gobuster":      ScenarioStandard,
+	"ffuf":          ScenarioStandard,
+	"httpx":         ScenarioStandard,
+	"dirsearch":     ScenarioStandard,
+	"nikto":         ScenarioStandard,
+	"sslscan":       ScenarioStandard,
+	"whatweb":       ScenarioStandard,
 
 	// Non-standard tasks (need custom scripts)
 	"custom poc":       ScenarioNonStandard,
@@ -451,34 +451,34 @@ var defaultScenarioRules = map[string]ScenarioType{
 	"custom exploit":   ScenarioNonStandard,
 
 	// Mixed tasks
-	"targeted exploit": ScenarioMixed,
-	"chain attack":     ScenarioMixed,
+	"targeted exploit":  ScenarioMixed,
+	"chain attack":      ScenarioMixed,
 	"post exploitation": ScenarioMixed,
-	"persistence":      ScenarioMixed,
+	"persistence":       ScenarioMixed,
 }
 
 // Default capability to tool mapping
 var defaultCapabilityMapping = map[string]string{
-	"port_scan":           "nmap",
-	"subdomain_enum":      "subfinder",
+	"port_scan":            "nmap",
+	"subdomain_enum":       "subfinder",
 	"directory_bruteforce": "gobuster",
-	"vulnerability_scan":  "nuclei",
-	"sql_injection":       "sqlmap",
-	"wordpress_scan":      "wpscan",
-	"http_probe":          "httpx",
-	"fuzzing":             "ffuf",
-	"wpscan":              "wpscan",
-	"dirsearch":           "dirsearch",
-	"nikto":               "nikto",
-	"sslscan":             "sslscan",
-	"whatweb":             "whatweb",
-	"nmap":                "nmap",
-	"nuclei":              "nuclei",
-	"gobuster":            "gobuster",
-	"ffuf":                "ffuf",
-	"httpx":               "httpx",
-	"subfinder":           "subfinder",
-	"sqlmap":              "sqlmap",
+	"vulnerability_scan":   "nuclei",
+	"sql_injection":        "sqlmap",
+	"wordpress_scan":       "wpscan",
+	"http_probe":           "httpx",
+	"fuzzing":              "ffuf",
+	"wpscan":               "wpscan",
+	"dirsearch":            "dirsearch",
+	"nikto":                "nikto",
+	"sslscan":              "sslscan",
+	"whatweb":              "whatweb",
+	"nmap":                 "nmap",
+	"nuclei":               "nuclei",
+	"gobuster":             "gobuster",
+	"ffuf":                 "ffuf",
+	"httpx":                "httpx",
+	"subfinder":            "subfinder",
+	"sqlmap":               "sqlmap",
 }
 
 // AddRule adds a custom scenario rule.

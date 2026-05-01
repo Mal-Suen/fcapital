@@ -14,41 +14,41 @@ import (
 
 // ToolDefinition represents a tool's definition.
 type ToolDefinition struct {
-	Name          string          `json:"name" yaml:"name"`
-	Description   string          `json:"description" yaml:"description"`
-	Category      string          `json:"category" yaml:"category"`
-	Capabilities  []string        `json:"capabilities" yaml:"capabilities"`
+	Name           string          `json:"name" yaml:"name"`
+	Description    string          `json:"description" yaml:"description"`
+	Category       string          `json:"category" yaml:"category"`
+	Capabilities   []string        `json:"capabilities" yaml:"capabilities"`
 	InstallMethods []InstallMethod `json:"install_methods" yaml:"install_methods"`
-	Fallbacks     []string        `json:"fallbacks" yaml:"fallbacks"`
-	VerifyCmd     string          `json:"verify_cmd" yaml:"verify_cmd"`
+	Fallbacks      []string        `json:"fallbacks" yaml:"fallbacks"`
+	VerifyCmd      string          `json:"verify_cmd" yaml:"verify_cmd"`
 }
 
 // InstallMethod represents a method to install a tool.
 type InstallMethod struct {
-	Type        string `json:"type" yaml:"type"`               // winget, apt, brew, go, pip, etc.
-	Package     string `json:"package" yaml:"package"`         // Package name or URL
+	Type        string `json:"type" yaml:"type"`                 // winget, apt, brew, go, pip, etc.
+	Package     string `json:"package" yaml:"package"`           // Package name or URL
 	PostInstall string `json:"post_install" yaml:"post_install"` // Command to run after install
-	VerifyCmd   string `json:"verify_cmd" yaml:"verify_cmd"`   // Override verify command
+	VerifyCmd   string `json:"verify_cmd" yaml:"verify_cmd"`     // Override verify command
 }
 
 // ToolStatus represents the status of a tool.
 type ToolStatus struct {
-	Name      string `json:"name"`
-	Version   string `json:"version"`
-	Path      string `json:"path"`
-	Status    string `json:"status"` // ready, missing, error
-	Error     string `json:"error,omitempty"`
+	Name    string `json:"name"`
+	Version string `json:"version"`
+	Path    string `json:"path"`
+	Status  string `json:"status"` // ready, missing, error
+	Error   string `json:"error,omitempty"`
 }
 
 // ExecutionResult represents the result of tool execution.
 type ExecutionResult struct {
-	ToolName  string        `json:"tool_name"`
-	Command   string        `json:"command"`
-	Args      []string      `json:"args"`
-	Output    string        `json:"output"`
-	Error     string        `json:"error,omitempty"`
-	Duration  time.Duration `json:"duration"`
-	Success   bool          `json:"success"`
+	ToolName string        `json:"tool_name"`
+	Command  string        `json:"command"`
+	Args     []string      `json:"args"`
+	Output   string        `json:"output"`
+	Error    string        `json:"error,omitempty"`
+	Duration time.Duration `json:"duration"`
+	Success  bool          `json:"success"`
 }
 
 // ScheduleRequest represents a request to schedule a tool.
@@ -61,13 +61,13 @@ type ScheduleRequest struct {
 
 // Scheduler manages tool scheduling and execution.
 type Scheduler struct {
-	tools          map[string]*ToolDefinition
-	capabilityMap  map[string]string // capability -> primary tool
-	toolStatus     map[string]*ToolStatus
-	runner         *Runner
-	installer      *Installer
-	mu             sync.RWMutex
-	logger         Logger
+	tools         map[string]*ToolDefinition
+	capabilityMap map[string]string // capability -> primary tool
+	toolStatus    map[string]*ToolStatus
+	runner        *Runner
+	installer     *Installer
+	mu            sync.RWMutex
+	logger        Logger
 }
 
 // Logger interface for logging.

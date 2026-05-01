@@ -25,9 +25,9 @@ type Session struct {
 
 // SystemInfo represents system information.
 type SystemInfo struct {
-	OS              string            `json:"os"`               // windows, linux, darwin
+	OS              string            `json:"os"` // windows, linux, darwin
 	OSVersion       string            `json:"os_version"`
-	Arch            string            `json:"arch"`             // amd64, arm64
+	Arch            string            `json:"arch"` // amd64, arm64
 	Hostname        string            `json:"hostname"`
 	Username        string            `json:"username"`
 	NetworkInfo     *NetworkInfo      `json:"network_info"`
@@ -37,9 +37,9 @@ type SystemInfo struct {
 
 // NetworkInfo represents network information.
 type NetworkInfo struct {
-	Interfaces  []NetworkInterface `json:"interfaces"`
-	DNSServers  []string           `json:"dns_servers"`
-	PublicIP    string             `json:"public_ip,omitempty"`
+	Interfaces []NetworkInterface `json:"interfaces"`
+	DNSServers []string           `json:"dns_servers"`
+	PublicIP   string             `json:"public_ip,omitempty"`
 }
 
 // NetworkInterface represents a network interface.
@@ -61,16 +61,16 @@ type ToolInfo struct {
 
 // PhaseResult represents a phase execution result.
 type PhaseResult struct {
-	PhaseID      string                 `json:"phase_id"`
-	PhaseName    string                 `json:"phase_name"`
-	StartTime    time.Time              `json:"start_time"`
-	EndTime      time.Time              `json:"end_time"`
-	Status       string                 `json:"status"`
-	Findings     map[string]interface{} `json:"findings"`
-	ToolsUsed    []string               `json:"tools_used"`
-	AISummary    string                 `json:"ai_summary"`
-	RawOutput    string                 `json:"raw_output,omitempty"`
-	Error        string                 `json:"error,omitempty"`
+	PhaseID   string                 `json:"phase_id"`
+	PhaseName string                 `json:"phase_name"`
+	StartTime time.Time              `json:"start_time"`
+	EndTime   time.Time              `json:"end_time"`
+	Status    string                 `json:"status"`
+	Findings  map[string]interface{} `json:"findings"`
+	ToolsUsed []string               `json:"tools_used"`
+	AISummary string                 `json:"ai_summary"`
+	RawOutput string                 `json:"raw_output,omitempty"`
+	Error     string                 `json:"error,omitempty"`
 }
 
 // Message represents an AI conversation message.
@@ -82,15 +82,15 @@ type Message struct {
 
 // Context represents the complete testing context.
 type Context struct {
-	Session       Session               `json:"session"`
-	SystemInfo    SystemInfo            `json:"system_info"`
-	Tools         []ToolInfo            `json:"tools"`
-	PhaseHistory  []PhaseResult         `json:"phase_history"`
-	CurrentPhase  string                `json:"current_phase"`
-	Conversation  []Message             `json:"conversation"`
-	Metadata      map[string]interface{} `json:"metadata"`
-	CreatedAt     time.Time             `json:"created_at"`
-	UpdatedAt     time.Time             `json:"updated_at"`
+	Session      Session                `json:"session"`
+	SystemInfo   SystemInfo             `json:"system_info"`
+	Tools        []ToolInfo             `json:"tools"`
+	PhaseHistory []PhaseResult          `json:"phase_history"`
+	CurrentPhase string                 `json:"current_phase"`
+	Conversation []Message              `json:"conversation"`
+	Metadata     map[string]interface{} `json:"metadata"`
+	CreatedAt    time.Time              `json:"created_at"`
+	UpdatedAt    time.Time              `json:"updated_at"`
 }
 
 // Manager manages the testing context.

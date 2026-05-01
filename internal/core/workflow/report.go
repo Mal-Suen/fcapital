@@ -100,17 +100,17 @@ func (g *ReportGenerator) GenerateMarkdown(result *WorkflowResult, outputPath st
 
 // TemplateData 模板数据
 type TemplateData struct {
-	Target       string
-	WorkflowName string
-	StartTime    string
-	EndTime      string
-	Duration     string
-	Status       string
-	StatusClass  string
-	Summary      *ScanSummary
-	Steps        map[string]*StepResult
+	Target        string
+	WorkflowName  string
+	StartTime     string
+	EndTime       string
+	Duration      string
+	Status        string
+	StatusClass   string
+	Summary       *ScanSummary
+	Steps         map[string]*StepResult
 	CriticalVulns []VulnInfo
-	GeneratedAt  string
+	GeneratedAt   string
 }
 
 func (g *ReportGenerator) prepareTemplateData(result *WorkflowResult) *TemplateData {

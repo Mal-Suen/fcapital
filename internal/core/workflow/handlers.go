@@ -78,10 +78,10 @@ func (h *ReconHandler) executeHTTPProbe(ctx context.Context, step *Step, execCtx
 	}
 
 	opts := &recon.HTTPOptions{
-		Title:         true,
-		StatusCode:    true,
-		WebServer:     true,
-		TechDetect:    true,
+		Title:      true,
+		StatusCode: true,
+		WebServer:  true,
+		TechDetect: true,
 	}
 
 	results, err := runner.Probe(ctx, targets, opts)

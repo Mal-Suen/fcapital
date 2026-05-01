@@ -32,16 +32,16 @@ type LogEntry struct {
 
 // SessionLog 会话日志
 type SessionLog struct {
-	ID          string        `json:"id"`
-	Target      string        `json:"target"`
-	StartTime   time.Time     `json:"start_time"`
-	EndTime     *time.Time    `json:"end_time,omitempty"`
-	Status      string        `json:"status"` // running, completed, interrupted
-	Results     []PhaseResult `json:"results"`
-	History     []HistoryEntry `json:"history"`
-	Logs        []LogEntry    `json:"logs"`
-	CurrentPhase string       `json:"current_phase"`
-	NextAction  string        `json:"next_action,omitempty"` // 下一步建议，用于恢复
+	ID           string         `json:"id"`
+	Target       string         `json:"target"`
+	StartTime    time.Time      `json:"start_time"`
+	EndTime      *time.Time     `json:"end_time,omitempty"`
+	Status       string         `json:"status"` // running, completed, interrupted
+	Results      []PhaseResult  `json:"results"`
+	History      []HistoryEntry `json:"history"`
+	Logs         []LogEntry     `json:"logs"`
+	CurrentPhase string         `json:"current_phase"`
+	NextAction   string         `json:"next_action,omitempty"` // 下一步建议，用于恢复
 }
 
 // PhaseResult 阶段结果
@@ -63,10 +63,10 @@ type HistoryEntry struct {
 
 // Logger 日志管理器
 type Logger struct {
-	logDir     string
-	sessionID  string
-	session    *SessionLog
-	file       *os.File
+	logDir    string
+	sessionID string
+	session   *SessionLog
+	file      *os.File
 }
 
 // NewLogger 创建新的日志管理器
@@ -76,10 +76,10 @@ func NewLogger(logDir string) *Logger {
 		homeDir, _ := os.UserHomeDir()
 		logDir = filepath.Join(homeDir, ".fcapital", "sessions")
 	}
-	
+
 	// 确保目录存在
 	os.MkdirAll(logDir, 0755)
-	
+
 	return &Logger{
 		logDir: logDir,
 	}
@@ -88,7 +88,7 @@ func NewLogger(logDir string) *Logger {
 // NewSession 创建新会话
 func (l *Logger) NewSession(target string) *SessionLog {
 	l.sessionID = fmt.Sprintf("session_%s", time.Now().Format("20060102_150405"))
-	
+
 	l.session = &SessionLog{
 		ID:           l.sessionID,
 		Target:       target,
@@ -99,37 +99,37 @@ func (l *Logger) NewSession(target string) *SessionLog {
 		Logs:         []LogEntry{},
 		CurrentPhase: "信息收集",
 	}
-	
+
 	// 创建日志文件
 	logPath := l.GetLogPath()
 	l.file, _ = os.Create(logPath)
-	
+
 	l.Log(LevelInfo, "init", "", "会话开始", true, "")
 	l.Save()
-	
+
 	return l.session
 }
 
 // LoadSession 加载已有会话
 func (l *Logger) LoadSession(sessionID string) (*SessionLog, error) {
 	logPath := filepath.Join(l.logDir, sessionID+".json")
-	
+
 	data, err := os.ReadFile(logPath)
 	if err != nil {
 		return nil, fmt.Errorf("读取会话文件失败: %w", err)
 	}
-	
+
 	var session SessionLog
 	if err := json.Unmarshal(data, &session); err != nil {
 		return nil, fmt.Errorf("解析会话文件失败: %w", err)
 	}
-	
+
 	l.sessionID = sessionID
 	l.session = &session
-	
+
 	// 以追加模式打开日志文件
 	l.file, _ = os.OpenFile(logPath, os.O_WRONLY|os.O_APPEND, 0644)
-	
+
 	return l.session, nil
 }
 
@@ -143,7 +143,7 @@ func (l *Logger) Log(level LogLevel, phase, tool, message string, success bool, 
 	if l.session == nil {
 		return
 	}
-	
+
 	levelStr := "INFO"
 	switch level {
 	case LevelDebug:
@@ -153,7 +153,7 @@ func (l *Logger) Log(level LogLevel, phase, tool, message string, success bool, 
 	case LevelError:
 		levelStr = "ERROR"
 	}
-	
+
 	entry := LogEntry{
 		Timestamp: time.Now(),
 		Level:     levelStr,
@@ -164,9 +164,9 @@ func (l *Logger) Log(level LogLevel, phase, tool, message string, success bool, 
 		Success:   success,
 		Output:    output,
 	}
-	
+
 	l.session.Logs = append(l.session.Logs, entry)
-	
+
 	// 控制台输出
 	timeStr := entry.Timestamp.Format("15:04:05")
 	icon := "✅"
@@ -181,7 +181,7 @@ func (l *Logger) RecordResult(phase, tool string, success bool, output, summary 
 	if l.session == nil {
 		return
 	}
-	
+
 	result := PhaseResult{
 		Phase:   phase,
 		Tool:    tool,
@@ -190,7 +190,7 @@ func (l *Logger) RecordResult(phase, tool string, success bool, output, summary 
 		Summary: summary,
 	}
 	l.session.Results = append(l.session.Results, result)
-	
+
 	l.Log(LevelInfo, phase, tool, summary, success, "")
 	l.Save()
 }
@@ -200,7 +200,7 @@ func (l *Logger) RecordHistory(action, tool, result, summary string) {
 	if l.session == nil {
 		return
 	}
-	
+
 	entry := HistoryEntry{
 		Action:  action,
 		Tool:    tool,
@@ -234,13 +234,13 @@ func (l *Logger) Complete() {
 	if l.session == nil {
 		return
 	}
-	
+
 	now := time.Now()
 	l.session.EndTime = &now
 	l.session.Status = "completed"
 	l.Log(LevelInfo, "end", "", "会话完成", true, "")
 	l.Save()
-	
+
 	if l.file != nil {
 		l.file.Close()
 	}
@@ -251,13 +251,13 @@ func (l *Logger) Interrupt() {
 	if l.session == nil {
 		return
 	}
-	
+
 	now := time.Now()
 	l.session.EndTime = &now
 	l.session.Status = "interrupted"
 	l.Log(LevelWarn, "interrupt", "", "会话中断", false, "")
 	l.Save()
-	
+
 	if l.file != nil {
 		l.file.Close()
 	}
@@ -268,13 +268,13 @@ func (l *Logger) Save() error {
 	if l.session == nil {
 		return nil
 	}
-	
+
 	logPath := l.GetLogPath()
 	data, err := json.MarshalIndent(l.session, "", "  ")
 	if err != nil {
 		return fmt.Errorf("序列化会话失败: %w", err)
 	}
-	
+
 	return os.WriteFile(logPath, data, 0644)
 }
 
@@ -294,12 +294,12 @@ func ListSessions(logDir string) ([]SessionLog, error) {
 		homeDir, _ := os.UserHomeDir()
 		logDir = filepath.Join(homeDir, ".fcapital", "sessions")
 	}
-	
+
 	files, err := os.ReadDir(logDir)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var sessions []SessionLog
 	for _, file := range files {
 		if filepath.Ext(file.Name()) == ".json" {
@@ -307,21 +307,21 @@ func ListSessions(logDir string) ([]SessionLog, error) {
 			if err != nil {
 				continue
 			}
-			
+
 			var session SessionLog
 			if err := json.Unmarshal(data, &session); err != nil {
 				continue
 			}
-			
+
 			sessions = append(sessions, session)
 		}
 	}
-	
+
 	// 按时间倒序排列
 	for i := 0; i < len(sessions)/2; i++ {
 		sessions[i], sessions[len(sessions)-1-i] = sessions[len(sessions)-1-i], sessions[i]
 	}
-	
+
 	return sessions, nil
 }
 
@@ -331,7 +331,7 @@ func DeleteSession(logDir, sessionID string) error {
 		homeDir, _ := os.UserHomeDir()
 		logDir = filepath.Join(homeDir, ".fcapital", "sessions")
 	}
-	
+
 	logPath := filepath.Join(logDir, sessionID+".json")
 	return os.Remove(logPath)
 }

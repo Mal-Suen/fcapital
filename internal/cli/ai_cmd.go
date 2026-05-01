@@ -398,6 +398,16 @@ func executeTaskWithLog(ctx context.Context, disp *dispatcher.Dispatcher, gen *s
 func handleToolInstallation(toolName string, reader *bufio.Reader, provider providers.Provider, ctx context.Context) bool {
 	fmt.Printf("\n⚠️  工具 '%s' 未安装\n", toolName)
 
+	// 检查工具是否支持当前系统
+	checker := toolcheck.NewChecker()
+	toolInfo := checker.CheckTool(toolName)
+
+	if !toolInfo.Supported {
+		fmt.Printf("❌ %s 不支持 %s 系统\n", toolName, runtime.GOOS)
+		fmt.Println("   请选择其他操作或手动寻找替代方案")
+		return false
+	}
+
 	instructions := toolcheck.GetInstallInstructions(toolName)
 	fmt.Printf("\n📦 安装说明:\n%s\n", instructions)
 
@@ -420,7 +430,6 @@ func handleToolInstallation(toolName string, reader *bufio.Reader, provider prov
 		return false
 	}
 
-	checker := toolcheck.NewChecker()
 	if checker.IsToolAvailable(toolName) {
 		fmt.Printf("✅ 检测到 %s 已安装\n", toolName)
 		return true

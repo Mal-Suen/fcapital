@@ -375,11 +375,11 @@ const installPromptTemplate = `需要安装工具：%s
 
 // ProviderConfig represents provider configuration.
 type ProviderConfig struct {
-	Type     string        `json:"type" yaml:"type"`
-	APIKey   string        `json:"api_key" yaml:"api_key"`
-	Model    string        `json:"model" yaml:"model"`
-	BaseURL  string        `json:"base_url" yaml:"base_url"`
-	Timeout  time.Duration `json:"timeout" yaml:"timeout"`
+	Type    string        `json:"type" yaml:"type"`
+	APIKey  string        `json:"api_key" yaml:"api_key"`
+	Model   string        `json:"model" yaml:"model"`
+	BaseURL string        `json:"base_url" yaml:"base_url"`
+	Timeout time.Duration `json:"timeout" yaml:"timeout"`
 }
 
 // DefaultProviderConfigs returns default provider configurations.

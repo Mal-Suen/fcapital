@@ -52,9 +52,9 @@ func init() {
 
 	// 添加子命令
 	rootCmd.AddCommand(depsCmd)
-	rootCmd.AddCommand(reconCmd)     // 信息收集 + AI渗透
-	rootCmd.AddCommand(aiCmd)        // AI驱动扫描
-	rootCmd.AddCommand(scriptCmd)    // AI生成脚本
+	rootCmd.AddCommand(reconCmd)  // 信息收集 + AI渗透
+	rootCmd.AddCommand(aiCmd)     // AI驱动扫描
+	rootCmd.AddCommand(scriptCmd) // AI生成脚本
 	rootCmd.AddCommand(portscanCmd)
 	rootCmd.AddCommand(webscanCmd)
 	rootCmd.AddCommand(vulnscanCmd)

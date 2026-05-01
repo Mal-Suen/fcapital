@@ -12,6 +12,7 @@
 
 | 版本 | 日期 | 变更内容 |
 |------|------|----------|
+| 3.0.0 | 2026-05-01 | 代码结构重构：消除重复代码，引入服务层，统一接口抽象 |
 | 2.4.0 | 2026-04-25 | 重构 CLI 结构：recon 完成后自动进入 AI 模式，扩展信息收集范围 |
 | 2.3.0 | 2026-04-25 | 重构工具调度流程：AI自由推荐最佳工具，工具缺失时智能处理 |
 | 2.2.0 | 2026-04-24 | 修改工作流程：执行→AI分析→用户选择，而非自动执行下一步 |
@@ -989,3 +990,167 @@ AI分析阶段结果
 | 1.0.0 | 2026-04-20 | - | 初始版本，基础工具管理 |
 | 2.0.0 | 2026-04-22 | - | AI驱动架构升级 |
 | 2.1.0 | 2026-04-24 | - | 混合模式架构决策：工具调度+AI脚本生成 |
+| 3.0.0 | 2026-05-01 | - | 代码结构重构：消除重复代码，引入服务层 |
+
+---
+
+## 8. 代码结构重构需求 (新增 v3.0.0)
+
+> **版本**: 3.0.0
+> **添加日期**: 2026-05-01
+> **背景**: 代码审查发现多处结构问题，影响可维护性和可扩展性
+
+### 8.1 问题概述
+
+#### 8.1.1 代码重复问题
+
+| 重复内容 | 位置 | 影响 |
+|----------|------|------|
+| `Recommendation` 结构 | `ai_cmd.go`, `recon_all.go` | 修改需同步多处 |
+| `SessionState` 结构 | `ai_cmd.go`, `recon_all.go` | 状态定义不一致风险 |
+| `PhaseResult` 结构 | `ai_cmd.go`, `recon_all.go`, `logger/logger.go` | 三处定义可能不同步 |
+| `HistoryEntry` 结构 | `ai_cmd.go`, `recon_all.go`, `logger/logger.go` | 同上 |
+| 工具检测逻辑 | `toolmgr/manager.go`, `toolcheck/toolcheck.go` | 功能重叠，调用混乱 |
+| AI推荐函数 | `ai_cmd.go`, `recon_all.go` 各有一套 | 逻辑分散 |
+
+#### 8.1.2 职责划分问题
+
+| 问题 | 描述 | 影响 |
+|------|------|------|
+| CLI层职责过重 | `ai_cmd.go` (~500行) 和 `recon_all.go` (~600行) 包含业务逻辑 | 难以测试、难以复用 |
+| dispatcher与scheduler重叠 | 两者都做"根据任务找工具" | 职责边界不清 |
+| toolmgr与toolcheck重叠 | 两者都做工具检测和状态管理 | 代码冗余 |
+| helpers.go职责混乱 | 既包含API密钥获取，又包含工具注册 | 单一职责原则违反 |
+
+#### 8.1.3 架构问题
+
+| 问题 | 描述 |
+|------|------|
+| 缺少服务层 | CLI直接调用core和modules，缺少中间抽象 |
+| 缺少统一接口 | modules各Runner没有统一接口定义 |
+| 全局变量使用 | `toolmgr.go` 使用全局单例，不利于测试 |
+| 配置硬编码 | 工具参数硬编码在代码中 |
+
+### 8.2 重构目标
+
+| 目标 | 描述 | 优先级 |
+|------|------|--------|
+| 消除代码重复 | 统一类型定义，提取公共函数 | 高 |
+| 分离职责 | CLI只负责命令解析，业务逻辑移至服务层 | 高 |
+| 统一工具管理 | 合并 `toolmgr` 和 `toolcheck` | 中 |
+| 定义统一接口 | modules层定义 `Scanner` 接口 | 中 |
+| 配置外部化 | 工具参数从配置文件读取 | 低 |
+
+### 8.3 重构需求清单
+
+#### 8.3.1 公共类型统一 (高优先级)
+
+**需求**: 创建 `pkg/types` 包，统一公共类型定义。
+
+**验收标准**:
+- [ ] 创建 `pkg/types/session.go`，定义 `SessionState`, `PhaseResult`, `HistoryEntry`
+- [ ] 创建 `pkg/types/recommendation.go`，定义 `Recommendation`
+- [ ] 删除 `ai_cmd.go` 和 `recon_all.go` 中的重复定义
+- [ ] 所有代码引用统一类型
+
+#### 8.3.2 服务层引入 (高优先级)
+
+**需求**: 创建 `service` 包，承载业务逻辑。
+
+**验收标准**:
+- [ ] 创建 `service/ai_service.go`，封装AI推荐、会话管理逻辑
+- [ ] 创建 `service/recon_service.go`，封装信息收集编排逻辑
+- [ ] 创建 `service/session_service.go`，封装会话状态管理
+- [ ] CLI层仅调用service层，不直接调用core层
+
+#### 8.3.3 工具管理统一 (中优先级)
+
+**需求**: 合并 `toolmgr` 和 `toolcheck` 功能。
+
+**验收标准**:
+- [ ] 将 `pkg/toolcheck` 功能合并到 `core/toolmgr`
+- [ ] `toolmgr` 提供统一的工具检测、安装、状态管理接口
+- [ ] 删除 `pkg/toolcheck` 包
+- [ ] 更新所有调用处
+
+#### 8.3.4 模块接口抽象 (中优先级)
+
+**需求**: 定义 modules 层统一接口。
+
+**验收标准**:
+- [ ] 创建 `modules/interface.go`，定义 `Scanner` 接口
+- [ ] 所有 Runner 实现 `Scanner` 接口
+- [ ] 支持通过接口调用各模块
+
+#### 8.3.5 文件拆分 (低优先级)
+
+**需求**: 拆分过大的文件。
+
+**验收标准**:
+- [ ] `scheduler/scheduler.go` 拆分为 `scheduler.go`, `runner.go`, `installer.go`
+- [ ] `ai/providers/providers.go` 拆分为 `openai.go`, `deepseek.go`, `ollama.go`
+
+#### 8.3.6 配置外部化 (低优先级)
+
+**需求**: 工具参数从配置文件读取。
+
+**验收标准**:
+- [ ] 创建 `configs/tools.yaml`，定义工具默认参数
+- [ ] `dispatcher` 从配置文件读取参数
+- [ ] 支持用户自定义参数覆盖
+
+### 8.4 重构后的目录结构
+
+```
+internal/
+├── cli/                    # 纯 CLI 层，只负责命令解析
+│   ├── root.go
+│   ├── ai.go               # 简化，调用 service 层
+│   ├── recon.go            # 简化，调用 service 层
+│   ├── script.go
+│   ├── deps.go
+│   └── ...
+├── service/                # 新增：业务服务层
+│   ├── ai_service.go       # AI推荐、会话管理
+│   ├── recon_service.go    # 信息收集编排
+│   ├── scan_service.go     # 扫描编排
+│   └── session_service.go  # 会话管理
+├── core/                   # 核心组件
+│   ├── ai/
+│   │   ├── engine.go
+│   │   ├── prompts.go
+│   │   └── recommendation.go
+│   ├── dispatcher/
+│   ├── scheduler/
+│   │   ├── scheduler.go
+│   │   ├── runner.go       # 独立文件
+│   │   └── installer.go    # 独立文件
+│   ├── toolmgr/            # 合并 toolcheck 功能
+│   │   ├── manager.go
+│   │   ├── runner.go
+│   │   ├── checker.go      # 从 pkg/toolcheck 移入
+│   │   └── installer.go
+│   └── workflow/
+├── modules/                # 功能模块
+│   ├── interface.go        # 新增：统一接口定义
+│   ├── portscan/
+│   ├── recon/
+│   └── ...
+└── pkg/
+    ├── errors/
+    ├── logger/
+    ├── types/              # 新增：公共类型定义
+    │   ├── session.go
+    │   ├── result.go
+    │   └── recommendation.go
+    └── formatter/
+```
+
+### 8.5 验收标准
+
+- [ ] 编译通过，无错误
+- [ ] 所有现有功能正常工作
+- [ ] 代码重复率降低 50% 以上
+- [ ] CLI 文件平均行数 < 300
+- [ ] 单元测试覆盖核心逻辑
+- [ ] 文档更新完成

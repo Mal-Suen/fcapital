@@ -255,8 +255,8 @@ func (p *DiscoveryPhase) Execute(ctx context.Context, input *orchestrator.PhaseI
 
 		if result.Output != "" {
 			vulns = append(vulns, map[string]interface{}{
-				"url":       url,
-				"findings":  result.Output,
+				"url":      url,
+				"findings": result.Output,
 			})
 		}
 	}
@@ -341,10 +341,10 @@ func (p *VerificationPhase) Execute(ctx context.Context, input *orchestrator.Pha
 			})
 			if err == nil && strings.Contains(result.Output, "Parameter") {
 				verifiedVulns = append(verifiedVulns, map[string]interface{}{
-					"url":        url,
-					"type":       "sql_injection",
-					"verified":   true,
-					"details":    result.Output,
+					"url":      url,
+					"type":     "sql_injection",
+					"verified": true,
+					"details":  result.Output,
 				})
 			}
 		}
